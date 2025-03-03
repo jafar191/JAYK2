@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة المندوب</title>
+
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- مكتبات Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
+  <!-- ملف إعداد Firebase -->
+  <script src="scripts/firebase-config.js"></script>
+</head>
+<body>
+  <!-- التراك الشفاف للشاشة عند فتح القائمة الجانبية -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- القائمة الجانبية -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header" style="display: flex; flex-direction: column; align-items: flex-start;">
+      <!-- رسالة الترحيب تظهر في السطر الأول -->
+      <p class="welcome-message" style="margin: 0; font-size: 1rem;">مرحبا بك مجدداً 👋🏻</p>
+      <!-- اسم المندوب يظهر تحت رسالة الترحيب -->
+      <h2 id="driverName" style="margin: 0;">مندوب التوصيل</h2>
+      <!-- زر الإغلاق (يمكن ضبط مكانه إذا رغبت) -->
+      <button class="close-btn" onclick="closeSidebar()" style="align-self: flex-end;">×</button>
+    </div>
+    <p id="driverEmail"></p>
+    <!-- زر إنشاء حساب -->
+    <button class="nav-btn" onclick="openCreateAccountModal()" style="margin: 10px 0; background: #fff; color: var(--primary); border-radius: 8px; padding: 10px; width: 100%;">
+      إنشاء حساب
+    </button>
+    <!-- زر الحسابات المسجلة -->
+    <button class="nav-btn" onclick="showRegisteredAccounts()" style="margin: 10px 0; background: #e2e8f0; color: var(--text); border-radius: 8px; padding: 10px; width: 100%;">
+      الحسابات المسجلة
+    </button>
+    <button class="logout-btn" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i>
+      تسجيل الخروج
+    </button>
+  </aside>
+
+  <!-- الشريط العلوي -->
+  <header class="top-bar">
+    <h1>جايك للتوصيل السريع</h1>
+    <button class="refresh-btn" onclick="location.reload()">تحديث</button>
+  </header>
+
+  <!-- المحتوى الرئيسي -->
+  <main class="main-content">
+    <div class="status-tabs">
+      <button class="tab-btn active" data-status="فعال">طلبات جديدة</button>
+      <button class="tab-btn" data-status="قيد التوصيل">قيد التوصيل</button>
+      <button class="tab-btn" data-status="مبلغة">طلبات مبلغة</button>
+      <button class="tab-btn" data-status="مكتملة">طلبات مكتملة</button>
+    </div>
+
+    <section class="recent-orders">
+      <!-- حاوية البطاقات -->
+      <div id="ordersTableBody" class="orders-container"></div>
+    </section>
+  </main>
+
+  <!-- الشريط السفلي مع زر الإشعارات وباقي الأزرار -->
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="openSidebar()">
+      <i class="fas fa-bars"></i>
+      <span>قائمة</span>
+    </button>
+    <button class="nav-btn" onclick="openNotifications()">
+      <i class="fas fa-bell"></i>
+      <span>إشعارات</span>
+    </button>
+    <button class="nav-btn" onclick="searchOrder()">
+      <i class="fas fa-search"></i>
+      <span>بحث</span>
+    </button>
+    <!-- زر إحصائيات المندوب -->
+    <button class="nav-btn" onclick="openDriverStatistics()">
+      <i class="fas fa-chart-bar"></i>
+      <span>إحصائيات</span>
+    </button>
+  </nav>
+
+  <script src="scripts/main.js"></script>
+</body>
+</html>

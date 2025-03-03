@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>جايك للتوصيل السريع</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* تنسيق عام */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Tajawal', sans-serif;
+    }
+    body {
+      background: #2563eb;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .auth-container {
+      background: #fff;
+      border-radius: 15px;
+      padding: 2rem;
+      width: 400px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #2563eb;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 1rem;
+      font-size: 16px;
+      transition: 0.3s;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .create-account {
+      margin-top: 1.5rem;
+      text-align: center;
+      color: #64748b;
+    }
+    .create-account a {
+      color: #2563eb;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .error-message {
+      color: #dc2626;
+      margin-top: 1rem;
+      display: none;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <form id="loginForm">
+      <h1>تسجيل الدخول</h1>
+      <input type="text" id="arabicName" placeholder="اسم المتجر/المندوب" required>
+      <input type="email" id="email" placeholder="الإيميل" required>
+      <input type="password" id="password" placeholder="كلمة المرور" required>
+      <button type="submit">تسجيل الدخول</button>
+      <div class="create-account">
+        <a href="#">نسيت كلمة المرور؟</a>
+      </div>
+    </form>
+    <div id="errorMessage" class="error-message"></div>
+  </div>
+  <!-- مكتبات Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
+  <!-- تحميل إعدادات Firebase -->
+  <script src="scripts/firebase-config.js"></script>
+  <!-- ملف العمليات الرئيسية -->
+  <script src="scripts/main.js"></script>
+</body>
+</html>

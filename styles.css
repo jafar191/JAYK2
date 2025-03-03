@@ -1,0 +1,590 @@
+:root {
+  --primary: #2563EB;
+  --background: #F8FAFC;
+  --text: #1E293B;
+  --border: #E2E8F0;
+  --danger: #EF4444;
+  --success: #10B981;
+}
+
+/* إعادة تعيين الأساسيات */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Tajawal', sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+  position: relative;
+}
+
+/* الشريط العلوي */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--primary);
+  color: #fff;
+  padding: 15px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+.top-bar h1 {
+  font-size: 1.1rem;
+}
+.refresh-btn {
+  background: var(--success);
+  border: none;
+  color: #fff;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+/* تبويبات الحالة */
+.status-tabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 0.8rem;
+  border: none;
+  border-radius: 8px;
+  background: #f1f5f9;
+  cursor: pointer;
+  font-weight: bold;
+  text-align: center;
+}
+.tab-btn.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* تغيير ألوان الأزرار بناءً على قيمة data-status */
+.tab-btn[data-status="فعال"] {
+  background-color: #3f4cdb;
+}
+.tab-btn[data-status="قيد التوصيل"] {
+  background-color: lightgreen;
+}
+.tab-btn[data-status="مبلغة"] {
+  background-color: red;
+}
+.tab-btn[data-status="مكتملة"] {
+  background-color: green;
+}
+
+/* حاوية الطلبات */
+.recent-orders {
+  margin-bottom: 100px;
+}
+.orders-container {
+  padding: 1rem;
+}
+
+/* رسالة "لا توجد طلبات" */
+.no-orders-msg {
+  text-align: center;
+  margin: 2rem 0;
+  font-size: 1rem;
+  color: #666;
+}
+
+/* الشريط السفلي */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  background: #fff;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0.5rem 0;
+  z-index: 1000;
+}
+
+/* إعداد المجموعات لتقسيم الشريط السفلي */
+.bottom-nav .left-group,
+.bottom-nav .right-group {
+  display: flex;
+  gap: 10px;
+}
+
+.bottom-nav .nav-btn {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  width: 60px;
+}
+.bottom-nav .nav-btn i {
+  font-size: 1.4rem;
+  margin-bottom: 3px;
+}
+.bottom-nav .nav-btn.plus-btn {
+  background: var(--primary);
+  color: #fff;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: -30px;
+}
+
+/* القائمة الجانبية */
+.sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 250px;
+  background: var(--primary);
+  color: #fff;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 2000;
+  padding: 20px;
+}
+.sidebar.open {
+  transform: translateX(0);
+}
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.close-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+.logout-btn {
+  background: var(--danger);
+  color: #fff;
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 20px;
+  width: 100%;
+}
+
+/* تراك الشفافية عند فتح القائمة */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.sidebar-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* النوافذ المنبثقة (مودال) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
+}
+.modal-content {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 500px;
+  animation: modalSlide 0.3s ease;
+}
+@keyframes modalSlide {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.modal-content h2 {
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+.form-group {
+  margin-bottom: 1rem;
+}
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px;
+  margin-top: 0.5rem;
+}
+.form-group textarea {
+  height: 80px;
+  resize: vertical;
+}
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+.btn.cancel {
+  background: var(--danger);
+  color: #fff;
+}
+.btn.submit {
+  background: var(--success);
+  color: #fff;
+}
+.error-message {
+  color: var(--danger);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  display: none;
+}
+.error-message.show {
+  display: block;
+}
+
+/* تصميم بطاقة الطلب في القائمة */
+.order-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 10px 0;
+  padding: 15px;
+  background-color: #fff;
+  direction: rtl;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+.order-card:hover {
+  transform: scale(1.02);
+}
+.order-header {
+  margin-bottom: 10px;
+}
+.order-number {
+  font-weight: bold;
+  color: var(--primary);
+  cursor: pointer;
+}
+.order-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.customer-info {
+  flex: 1;
+}
+.customer-name {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+.customer-phone {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.customer-phone a {
+  text-decoration: none;
+  color: inherit;
+}
+.order-status {
+  font-size: 14px;
+}
+
+/* شارات الحالة */
+.status-badge {
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  display: inline-block;
+}
+.status-فعال {
+  background: #fde68a;
+  color: #92400e;
+}
+.status-قيد\ التوصيل {
+  background: #bfdbfe;
+  color: #1e40af;
+}
+.status-مبلغة {
+  background: #fecaca;
+  color: #b91c1c;
+}
+.status-مكتملة {
+  background: #a7f3d0;
+  color: #065f46;
+}
+
+/* بطاقة تفاصيل الطلب (المودال) */
+.details-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 15px;
+  text-align: right;
+  color: #333;
+  margin-bottom: 1rem;
+  direction: rtl;
+}
+.details-card-header {
+  margin-bottom: 15px;
+  text-align: center;
+  color: var(--primary);
+}
+.details-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.detail-item {
+  display: flex;
+  flex-direction: column;
+}
+.detail-title {
+  font-size: 12px;
+  color: #666;
+}
+.detail-content {
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 2px;
+}
+
+/* حقل التبليغ */
+.report-info {
+  background: #f3e8ff;
+  border-radius: 8px;
+  padding: 10px;
+  margin: 1rem 0;
+  color: #4c1d95;
+}
+.report-textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #c084fc;
+  resize: vertical;
+}
+
+/* أزرار الإجراءات في تفاصيل الطلب (ملونة) */
+.details-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 10px;
+}
+.action-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  color: #fff;
+  font-weight: bold;
+  margin: 5px;
+  font-size: 0.9rem;
+}
+.action-btn.accept {
+  background-color: #17a2b8;
+}
+.action-btn.delivered {
+  background-color: #28a745;
+}
+.action-btn.report {
+  background-color: #ffc107;
+  color: #fff;
+}
+.action-btn.process {
+  background-color: #20c997;
+}
+.action-btn.delete {
+  background-color: #dc3545;
+}
+.action-btn.edit {
+  background-color: #007bff;
+}
+.action-btn.close {
+  background-color: #6c757d;
+}
+.action-btn.contact {
+  background-color: #25D366;
+}
+
+/* تصميم قائمة الحسابات المسجلة (المودال) */
+.registered-accounts-modal ul {
+  list-style: none;
+  padding: 0;
+}
+.registered-accounts-modal li {
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+  cursor: pointer;
+}
+
+/* --- إضافات لتقسيم الشريط السفلي --- */
+.bottom-nav .left-group,
+.bottom-nav .right-group {
+  display: flex;
+  gap: 10px;
+}
+
+/* إحصائيات (دوائر بسيطة) */
+.stats-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.stat-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 100px;
+  padding: 10px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.stat-circle {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 5px;
+  border: 3px solid var(--primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--primary);
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--text);
+}
+/* شبكة (Grid) لعرض بطاقات الإحصائيات */
+.circular-stats-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* البطاقة نفسها */
+.circular-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100px; /* تحكم بالعرض حسب رغبتك */
+}
+
+/* الدائرة الخارجية (progress) */
+.circular-progress {
+  --size: 70px; /* قطر الدائرة */
+  --track-color: #ededed; /* لون الخلفية */
+  --fill-color: #2563EB; /* لون التعبئة */
+  --percentage: 0; /* ستُضبط ديناميكياً من الـ inline style */
+  
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--fill-color) calc(var(--percentage) * 1%), 
+    var(--track-color) 0
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 5px;
+}
+
+/* طبقة داخلية لتشكيل الدائرة البيضاء في المنتصف */
+.circular-progress::before {
+  content: "";
+  position: absolute;
+  width: calc(var(--size) - 12px); /* يمكنك ضبط القيمة */
+  height: calc(var(--size) - 12px);
+  background: #fff;
+  border-radius: 50%;
+}
+
+/* العنصر الداخلي الذي سيحتوي على القيمة النصية */
+.circular-inner {
+  position: relative;
+  z-index: 1; /* لجعله فوق ::before */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--size) - 16px);
+  height: calc(var(--size) - 16px);
+  border-radius: 50%;
+}
+
+/* القيمة النصية في منتصف الدائرة */
+.progress-value {
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--fill-color);
+}
+
+/* اسم الحالة تحت الدائرة */
+.stat-label {
+  font-size: 0.8rem;
+  text-align: center;
+  margin-top: 5px;
+  color: var(--text);
+}
