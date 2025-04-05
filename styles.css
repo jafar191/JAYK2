@@ -1,196 +1,242 @@
+/************************************************
+ *             الألوان والخطوط الأساسية         *
+ ************************************************/
 :root {
-  --primary: #2563EB;
-  --background: #F8FAFC;
-  --text: #1E293B;
-  --border: #E2E8F0;
-  --danger: #EF4444;
-  --success: #10B981;
+  --primary: #2563EB;                /* أزرق أساسي */
+  --primary-dark: #1D4ED8;           /* درجة أدكن من الأزرق */
+  /* تم حذف متغيرات التدرج */
+  --white: #ffffff;
+  --text-dark: #1e293b;
+  --text-light: #ffffff;
+  --border: #e2e8f0;
+  --danger: #ef4444;
+  --success: #10b981;
+  --warning: #f97316;
+  --info: #0ea5e9;
+  --font-family: 'Tajawal', sans-serif;
 }
 
-/* إعادة تعيين الأساسيات */
+body {
+  background: #f3f4f6; /* خلفية ثابتة كما في ملفات HTML */
+}
+/************************************************
+ *               إعادة ضبط الأساسيات           *
+ ************************************************/
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Tajawal', sans-serif;
+  font-family: var(--font-family);
 }
 
 body {
-  background: var(--background);
-  color: var(--text);
+  background: linear-gradient(
+    135deg,
+    var(--background-gradient-from),
+    var(--background-gradient-to)
+  );
+  min-height: 100vh;
+  color: var(--text-dark);
   position: relative;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
 }
 
-/* الشريط العلوي */
+/************************************************
+ *                الشريط العلوي (Top Bar)       *
+ ************************************************/
 .top-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--primary);
-  color: #fff;
-  padding: 15px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background: none;
+  color: var(--white);
+  padding: 15px 20px;
 }
 .top-bar h1 {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--white);
 }
 .refresh-btn {
-  background: var(--success);
-  border: none;
-  color: #fff;
+  background: var(--white);
+  color: var(--primary-dark);
   padding: 8px 15px;
-  border-radius: 6px;
+  border-radius: 50px;
   cursor: pointer;
   font-size: 0.9rem;
+  border: none;
+  transition: background-color 0.2s ease;
+}
+.refresh-btn:hover {
+  background-color: rgba(255, 255, 255, 0.8);
 }
 
-/* تبويبات الحالة */
+/************************************************
+ *       تبويبات الحالة (Status Tabs)          *
+ ************************************************/
 .status-tabs {
   display: flex;
   gap: 0.5rem;
-  padding: 1rem;
-  background: #fff;
-  border-bottom: 1px solid var(--border);
+  margin: 15px 0;
+  padding: 0 15px;
+  overflow-x: auto;
 }
-
 .tab-btn {
   flex: 1;
-  padding: 0.8rem;
+  background: var(--white);
+  color: #000;
   border: none;
-  border-radius: 8px;
-  background: #f1f5f9;
+  border-radius: 30px;
+  padding: 0.8rem;
   cursor: pointer;
   font-weight: bold;
   text-align: center;
+  transition: background 0.2s ease, color 0.2s ease;
+  min-width: 80px;
+  margin-bottom: 5px;
 }
+.tab-btn:hover {
+  background: rgba(255,255,255,0.7);
+}
+/* عند التفعيل: خلفية زرقاء ونص أبيض */
 .tab-btn.active {
   background: var(--primary);
-  color: #fff;
+  color: var(--white);
 }
 
-/* تغيير ألوان الأزرار بناءً على قيمة data-status */
-.tab-btn[data-status="فعال"] {
-  background-color: #3f4cdb;
-}
-.tab-btn[data-status="قيد التوصيل"] {
-  background-color: lightgreen;
-}
-.tab-btn[data-status="مبلغة"] {
-  background-color: red;
-}
-.tab-btn[data-status="مكتملة"] {
-  background-color: green;
-}
-
-/* حاوية الطلبات */
-.recent-orders {
-  margin-bottom: 100px;
-}
+/************************************************
+ *           حاوية الطلبات (Orders List)        *
+ ************************************************/
 .orders-container {
-  padding: 1rem;
+  margin-top: 10px;
+  padding: 0 15px;
+}
+.order-card {
+  background: var(--white);
+  border-radius: 20px;
+  margin: 10px 0;
+  padding: 15px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.07);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.order-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+}
+.order-header {
+  margin-bottom: 10px;
+}
+.order-number {
+  font-weight: bold;
+  color: var(--primary-dark);
+}
+.order-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.customer-info {
+  flex: 1;
+}
+.customer-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 5px;
+}
+.customer-phone a {
+  text-decoration: none;
+  color: var(--primary-dark);
 }
 
-/* رسالة "لا توجد طلبات" */
-.no-orders-msg {
-  text-align: center;
-  margin: 2rem 0;
-  font-size: 1rem;
-  color: #666;
+/************************************************
+ *            شارات الحالة (Badges)            *
+ ************************************************/
+.status-badge {
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  display: inline-block;
+  font-weight: 600;
+}
+.status-فعال {
+  background: #2563EB; /* لون الخلفية الأزرق */
+  color: #ffffff;      /* لون النص الأبيض */
+}
+.status-قيد.التوصيل {
+  background: #d1fae5;
+  color: #065f46;
+}
+.status-مبلغة {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.status-مكتملة {
+  background: #bbf7d0;
+  color: #047857;
 }
 
-/* الشريط السفلي */
+/************************************************
+ *         الشريط السفلي (Bottom Nav)           *
+ ************************************************/
 .bottom-nav {
   position: fixed;
   bottom: 0;
-  right: 0;
-  left: 0;
-  background: #fff;
-  border-top: 1px solid var(--border);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--white);
+  width: 100%;
+  max-width: 500px;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
   display: flex;
   justify-content: space-around;
   align-items: center;
   padding: 0.5rem 0;
   z-index: 1000;
 }
-
-/* إعداد المجموعات لتقسيم الشريط السفلي */
-.bottom-nav .left-group,
-.bottom-nav .right-group {
-  display: flex;
-  gap: 10px;
-}
-
 .bottom-nav .nav-btn {
   background: none;
   border: none;
-  color: var(--text);
+  color: var(--primary-dark);
   font-size: 0.9rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   cursor: pointer;
   width: 60px;
+  transition: color 0.2s ease;
 }
 .bottom-nav .nav-btn i {
   font-size: 1.4rem;
   margin-bottom: 3px;
 }
+.bottom-nav .nav-btn:hover {
+  color: var(--primary);
+}
 .bottom-nav .nav-btn.plus-btn {
   background: var(--primary);
   color: #fff;
-  width: 60px;
-  height: 60px;
+  width: 55px;
+  height: 55px;
   border-radius: 50%;
   font-size: 1.4rem;
-  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 4px 10px rgba(37,99,235,0.3);
   display: flex;
   justify-content: center;
   align-items: center;
   margin-top: -30px;
+  transition: background 0.2s ease;
+}
+.bottom-nav .nav-btn.plus-btn:hover {
+  background: var(--primary-dark);
 }
 
-/* القائمة الجانبية */
-.sidebar {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  right: 0;
-  width: 250px;
-  background: var(--primary);
-  color: #fff;
-  transform: translateX(100%);
-  transition: transform 0.3s ease;
-  z-index: 2000;
-  padding: 20px;
-}
-.sidebar.open {
-  transform: translateX(0);
-}
-.sidebar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-.close-btn {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 1.5rem;
-  cursor: pointer;
-}
-.logout-btn {
-  background: var(--danger);
-  color: #fff;
-  padding: 0.6rem 1rem;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-top: 20px;
-  width: 100%;
-}
-
-/* تراك الشفافية عند فتح القائمة */
+/************************************************
+ *     القائمة الجانبية (Sidebar) & Overlay     *
+ ************************************************/
 .sidebar-overlay {
   position: fixed;
   top: 0;
@@ -207,8 +253,88 @@ body {
   opacity: 1;
   pointer-events: auto;
 }
+.sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 250px;
+  background: var(--white);
+  color: var(--text-dark);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 2000;
+  padding: 20px;
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+  box-shadow: -4px 0 10px rgba(0,0,0,0.1);
+}
+.sidebar.open {
+  transform: translateX(0);
+}
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--primary-dark);
+  font-size: 2.5rem;
+  cursor: pointer;
+}
+.header-content .welcome-message {
+  font-size: 1.1rem;
+  color: var(--primary-dark);
+}
+.header-content h2 {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--primary-dark);
+}
 
-/* النوافذ المنبثقة (مودال) */
+/* أزرار داخل الـSidebar */
+.bn29 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+  color: #fff;
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: 600;
+  padding: 12px 24px;
+  margin: 10px 0;
+  justify-content: center;
+  transition: opacity 0.2s ease;
+}
+.bn29:hover {
+  opacity: 0.8;
+}
+.bn29-notification {
+  background-color: #a78bfa;
+}
+.bn29-create {
+  background-color: var(--warning);
+}
+.bn29-registered {
+  background-color: #f472b6;
+}
+.bn29-logout {
+  background-color: var(--danger);
+}
+.bn29-reports {
+  background-color: var(--success);
+}
+
+/************************************************
+ *               نماذج من المودالات            *
+ ************************************************/
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -257,10 +383,6 @@ body {
   font-size: 16px;
   margin-top: 0.5rem;
 }
-.form-group textarea {
-  height: 80px;
-  resize: vertical;
-}
 .modal-actions {
   display: flex;
   gap: 1rem;
@@ -280,7 +402,7 @@ body {
   color: #fff;
 }
 .btn.submit {
-  background: var(--success);
+  background: var(--primary);
   color: #fff;
 }
 .error-message {
@@ -293,228 +415,9 @@ body {
   display: block;
 }
 
-/* تصميم بطاقة الطلب في القائمة */
-.order-card {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  margin: 10px 0;
-  padding: 15px;
-  background-color: #fff;
-  direction: rtl;
-  cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s;
-}
-.order-card:hover {
-  transform: scale(1.02);
-}
-.order-header {
-  margin-bottom: 10px;
-}
-.order-number {
-  font-weight: bold;
-  color: var(--primary);
-  cursor: pointer;
-}
-.order-body {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.customer-info {
-  flex: 1;
-}
-.customer-name {
-  font-size: 16px;
-  margin-bottom: 5px;
-}
-.customer-phone {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.customer-phone a {
-  text-decoration: none;
-  color: inherit;
-}
-.order-status {
-  font-size: 14px;
-}
-
-/* شارات الحالة */
-.status-badge {
-  padding: 0.3rem 0.8rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  display: inline-block;
-}
-.status-فعال {
-  background: #fde68a;
-  color: #92400e;
-}
-.status-قيد\ التوصيل {
-  background: #bfdbfe;
-  color: #1e40af;
-}
-.status-مبلغة {
-  background: #fecaca;
-  color: #b91c1c;
-}
-.status-مكتملة {
-  background: #a7f3d0;
-  color: #065f46;
-}
-
-/* بطاقة تفاصيل الطلب (المودال) */
-.details-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 15px;
-  text-align: right;
-  color: #333;
-  margin-bottom: 1rem;
-  direction: rtl;
-}
-.details-card-header {
-  margin-bottom: 15px;
-  text-align: center;
-  color: var(--primary);
-}
-.details-card-body {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.detail-item {
-  display: flex;
-  flex-direction: column;
-}
-.detail-title {
-  font-size: 12px;
-  color: #666;
-}
-.detail-content {
-  font-size: 16px;
-  font-weight: bold;
-  margin-top: 2px;
-}
-
-/* حقل التبليغ */
-.report-info {
-  background: #f3e8ff;
-  border-radius: 8px;
-  padding: 10px;
-  margin: 1rem 0;
-  color: #4c1d95;
-}
-.report-textarea {
-  width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #c084fc;
-  resize: vertical;
-}
-
-/* أزرار الإجراءات في تفاصيل الطلب (ملونة) */
-.details-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-  margin-top: 10px;
-}
-.action-btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  color: #fff;
-  font-weight: bold;
-  margin: 5px;
-  font-size: 0.9rem;
-}
-.action-btn.accept {
-  background-color: #17a2b8;
-}
-.action-btn.delivered {
-  background-color: #28a745;
-}
-.action-btn.report {
-  background-color: #ffc107;
-  color: #fff;
-}
-.action-btn.process {
-  background-color: #20c997;
-}
-.action-btn.delete {
-  background-color: #dc3545;
-}
-.action-btn.edit {
-  background-color: #007bff;
-}
-.action-btn.close {
-  background-color: #6c757d;
-}
-.action-btn.contact {
-  background-color: #25D366;
-}
-
-/* تصميم قائمة الحسابات المسجلة (المودال) */
-.registered-accounts-modal ul {
-  list-style: none;
-  padding: 0;
-}
-.registered-accounts-modal li {
-  padding: 10px;
-  border-bottom: 1px solid #ccc;
-  cursor: pointer;
-}
-
-/* --- إضافات لتقسيم الشريط السفلي --- */
-.bottom-nav .left-group,
-.bottom-nav .right-group {
-  display: flex;
-  gap: 10px;
-}
-
-/* إحصائيات (دوائر بسيطة) */
-.stats-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.stat-card {
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  width: 100px;
-  padding: 10px;
-  text-align: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.stat-circle {
-  width: 60px;
-  height: 60px;
-  margin: 0 auto 5px;
-  border: 3px solid var(--primary);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: var(--primary);
-}
-
-.stat-label {
-  font-size: 0.9rem;
-  color: var(--text);
-}
-/* شبكة (Grid) لعرض بطاقات الإحصائيات */
+/************************************************
+ *         إحصائيات (دوائر) - Circular Stats    *
+ ************************************************/
 .circular-stats-grid {
   display: flex;
   flex-wrap: wrap;
@@ -522,21 +425,17 @@ body {
   justify-content: center;
   margin-top: 20px;
 }
-
-/* البطاقة نفسها */
 .circular-stat-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100px; /* تحكم بالعرض حسب رغبتك */
+  width: 100px;
 }
-
-/* الدائرة الخارجية (progress) */
 .circular-progress {
-  --size: 70px; /* قطر الدائرة */
-  --track-color: #ededed; /* لون الخلفية */
-  --fill-color: #2563EB; /* لون التعبئة */
-  --percentage: 0; /* ستُضبط ديناميكياً من الـ inline style */
+  --size: 70px;
+  --track-color: #ededed;
+  --fill-color: #2563EB;
+  --percentage: 0;
   
   width: var(--size);
   height: var(--size);
@@ -551,21 +450,17 @@ body {
   position: relative;
   margin-bottom: 5px;
 }
-
-/* طبقة داخلية لتشكيل الدائرة البيضاء في المنتصف */
 .circular-progress::before {
   content: "";
   position: absolute;
-  width: calc(var(--size) - 12px); /* يمكنك ضبط القيمة */
+  width: calc(var(--size) - 12px);
   height: calc(var(--size) - 12px);
   background: #fff;
   border-radius: 50%;
 }
-
-/* العنصر الداخلي الذي سيحتوي على القيمة النصية */
 .circular-inner {
   position: relative;
-  z-index: 1; /* لجعله فوق ::before */
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -573,18 +468,189 @@ body {
   height: calc(var(--size) - 16px);
   border-radius: 50%;
 }
-
-/* القيمة النصية في منتصف الدائرة */
 .progress-value {
   font-size: 1rem;
   font-weight: bold;
   color: var(--fill-color);
 }
-
-/* اسم الحالة تحت الدائرة */
 .stat-label {
   font-size: 0.8rem;
   text-align: center;
   margin-top: 5px;
-  color: var(--text);
+  color: var(--text-dark);
 }
+
+/************************************************
+ *         تصميم التقارير - Report Card         *
+ ************************************************/
+.report-card {
+  background: var(--white);
+  border-radius: 15px;
+  padding: 20px;
+  margin: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.report-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+.report-header {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--primary-dark);
+  margin-bottom: 10px;
+  text-align: right;
+}
+.report-body {
+  font-size: 1rem;
+  color: var(--text-dark);
+  line-height: 1.5;
+  text-align: right;
+}
+
+/************************************************
+ *       تصميم الأكورديون (Accordion Layout)
+ ************************************************/
+.accordion {
+  background: var(--white);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 15px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.accordion-header {
+  padding: 15px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  text-align: right;
+  position: relative;
+  transition: background 0.3s ease;
+  color: var(--white);
+}
+.accordion-header.not-settled {
+  background: var(--primary-dark);
+}
+.accordion-header.settled {
+  background: var(--success);
+}
+.accordion-header:hover {
+  opacity: 0.9;
+}
+.accordion-header::after {
+  content: "+";
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+}
+.accordion-header.active::after {
+  content: "-";
+}
+.accordion-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  padding: 0 15px;
+  text-align: right;
+  background: #f9f9f9;
+}
+.accordion-body.open {
+  max-height: 500px; /* قيمة تقريبية حسب حجم المحتوى */
+  padding: 15px;
+}
+
+/************************************************
+ *  شبكة تفاصيل التقرير (Report Details Grid)
+ ************************************************/
+.report-details {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  margin: 10px 0;
+  white-space: nowrap; /* لضمان بقاء المحتوى في سطر واحد */
+}
+.report-details .label {
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  text-align: right;
+}
+.report-details .value {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--primary-dark);
+  text-align: left;
+}
+/* الشريط العلوي (Top Bar) */
+.top-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000; /* حتى يكون فوق المحتوى */
+  background: #2563eb;
+  color: #fff;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* الشريط السفلي (Bottom Nav) */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000; /* حتى يكون فوق المحتوى */
+  background: #fff;
+  width: 100%;
+  max-width: 500px;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+/* المحتوى الرئيسي (Main Content) */
+.main-content {
+  /* اترك مساحة كافية أعلى وأسفل حتى لا يختفي المحتوى خلف الشريطين */
+  padding-top: 60px;  /* ارتفاع الشريط العلوي */
+  padding-bottom: 70px; /* ارتفاع الشريط السفلي */
+  flex: 1;
+  overflow-y: auto; /* للسماح بالتمرير داخل المحتوى */
+}
+/* تأثير الـ Floating Label */ .floating-label-group { position: relative; margin-bottom: 1rem; }
+
+.floating-label-group input, .floating-label-group textarea, .floating-label-group select { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 16px; background: transparent; }
+
+.floating-label-group label { position: absolute; top: 50%; left: 12px; transform: translateY(-50%); color: #999; pointer-events: none; transition: all 0.2s ease; background-color: transparent; padding: 0 4px; }
+
+/* عند التركيز أو وجود قيمة، ينتقل الـ label للأعلى ويصغر حجمه */ .floating-label-group input:focus + label, .floating-label-group textarea:focus + label, .floating-label-group select:focus + label, .floating-label-group input:not(:placeholder-shown) + label, .floating-label-group textarea:not(:placeholder-shown) + label, .floating-label-group select:not(:placeholder-shown) + label { top: 0; font-size: 15px; color: var(--primary-dark); background-color: var(--white); }
+
+.status-tabs {
+  display: flex;
+  justify-content: center; /* توزيع الأزرار في الوسط */
+  align-items: center;
+  width: 100%;            /* عرض ثابت يعادل عرض الصفحة */
+  margin: 15px 0;
+  padding: 0;             /* إزالة الحشوة الأفقية */
+  overflow-x: hidden;     /* تعطيل التمرير الأفقي */
+  touch-action: none;     /* منع حركات اللمس على الأجهزة المحمولة */
+}
+
+.tab-btn {
+  background: var(--white);
+  color: #000;
+  border: none;
+  border-radius: 30px;
+  padding: 0.8rem 1rem;   /* زيادة الحشوة الأفقية لضبط الحجم */
+ 
+ 
