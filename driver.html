@@ -5,70 +5,349 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>لوحة المندوب</title>
 
+  <!-- استدعاء ملف التنسيقات -->
   <link rel="stylesheet" href="styles.css">
+
+  <!-- خطوط وأيقونات -->
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <!-- مكتبات Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
-  <!-- ملف إعداد Firebase -->
+
+  <!-- ملف تهيئة Firebase -->
   <script src="scripts/firebase-config.js"></script>
+
+  <!-- أي تنسيقات إضافية (إن احتجت) -->
+  <!-- تنسيقات إضافية خاصة بالتصميم الجديد -->
+  <style>
+    body {
+      background: #f3f4f6;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      font-family: 'Tajawal', sans-serif;
+      display: flex;
+      flex-direction: column;
+      color: #1e293b;
+    }
+
+    /* الشريط العلوي */
+    .top-bar {
+      background: #2563eb;
+      color: #fff;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .top-bar h1 {
+      font-size: 20px;
+      font-weight: bold;
+      margin: 0;
+    }
+    .refresh-btn {
+      background: #fff;
+      color: #2563eb;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 15px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    .refresh-btn:hover {
+      background-color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* محتوى الصفحة الرئيسي */
+    .main-content {
+      flex: 1;
+      padding-bottom: 60px; /* حتى لا يغطيه الشريط السفلي */
+    }
+
+    /* قسم الإحصائيات السريعة */
+    .quick-stats {
+      display: flex;
+      justify-content: space-evenly;
+      align-items: center;
+      margin: 10px 0;
+      padding: 0 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .stat-card {
+      background: #fff;
+      width: 45%;
+      min-width: 120px;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .stat-card h2 {
+      color: #2563eb;
+      font-size: 20px;
+      margin-bottom: 5px;
+    }
+    .stat-card p {
+      color: #475569;
+      font-size: 14px;
+      margin: 0;
+    }
+
+    /* قسم الأزرار / البطاقات الرئيسية */
+    .main-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      margin: 20px 10px;
+    }
+    .main-btn {
+      background: #fff;
+      width: 40%;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .main-btn:hover {
+      background: #f9fafb;
+    }
+    .main-btn i {
+      font-size: 28px;
+      color: #2563eb;
+      margin-bottom: 10px;
+    }
+    .main-btn span {
+      display: block;
+      font-size: 16px;
+      color: #1e293b;
+    }
+
+    /* تبويبات الحالة (Status Tabs) */
+    .status-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin: 15px 0;
+      padding: 0 15px;
+      overflow-x: auto;
+    }
+    .status-tabs .tab-btn {
+      flex: 1;
+      background: #fff;
+      color: #000;
+      border: none;
+      border-radius: 30px;
+      padding: 0.8rem;
+      cursor: pointer;
+      font-weight: bold;
+      text-align: center;
+      transition: background 0.2s ease, color 0.2s ease;
+      min-width: 80px;
+      margin-bottom: 5px;
+    }
+    .status-tabs .tab-btn:hover {
+      background: rgba(255,255,255,0.7);
+    }
+    .status-tabs .tab-btn.active {
+      color: #fff;
+      background: #2563eb;
+    }
+
+    /* قسم الطلبات */
+    .orders-container {
+      margin-top: 10px;
+      padding: 0 15px;
+    }
+    .order-card {
+      background: #fff;
+      border-radius: 20px;
+      margin: 10px 0;
+      padding: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.07);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .order-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    }
+
+    /* الشريط السفلي */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      width: 100%;
+      max-width: 500px;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0.5rem 0;
+      z-index: 1000;
+    }
+    .bottom-nav .nav-btn {
+      background: none;
+      border: none;
+      color: #2563eb;
+      font-size: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      width: 60px;
+      transition: color 0.2s ease;
+    }
+    .bottom-nav .nav-btn i {
+      font-size: 1.4rem;
+      margin-bottom: 3px;
+    }
+    .bottom-nav .nav-btn:hover {
+      color: #1d4ed8;
+    }
+    .bottom-nav .nav-btn.plus-btn {
+      background: #2563eb;
+      color: #fff;
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      font-size: 1.4rem;
+      box-shadow: 0 4px 10px rgba(37,99,235,0.3);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: -30px;
+      transition: background 0.2s ease;
+    }
+    .bottom-nav .nav-btn.plus-btn:hover {
+      background: #1d4ed8;
+    }
+
+    /* تحسين العرض على الشاشات الصغيرة */
+    @media (max-width: 600px) {
+      .stat-card {
+        width: 45%;
+        padding: 10px;
+      }
+      .main-btn {
+        width: 40%;
+        padding: 15px;
+      }
+      .main-btn i {
+        font-size: 24px;
+      }
+      .status-tabs .tab-btn {
+        font-size: 0.8rem;
+      }
+    }
+  </style>
 </head>
 <body>
-  <!-- التراك الشفاف للشاشة عند فتح القائمة الجانبية -->
+  </style>
+</head>
+<body>
+  <!-- تراكب القائمة الجانبية (Overlay) -->
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-  <!-- القائمة الجانبية -->
+  <!-- القائمة الجانبية (Sidebar) -->
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-header" style="display: flex; flex-direction: column; align-items: flex-start;">
-      <!-- رسالة الترحيب تظهر في السطر الأول -->
-      <p class="welcome-message" style="margin: 0; font-size: 1rem;">مرحبا بك مجدداً 👋🏻</p>
-      <!-- اسم المندوب يظهر تحت رسالة الترحيب -->
-      <h2 id="driverName" style="margin: 0;">مندوب التوصيل</h2>
-      <!-- زر الإغلاق (يمكن ضبط مكانه إذا رغبت) -->
-      <button class="close-btn" onclick="closeSidebar()" style="align-self: flex-end;">×</button>
+    <div class="sidebar-header">
+      <div class="header-content">
+        <p class="welcome-message">مرحباً بك مجدداً 👋🏻</p>
+        <h2 id="driverName">اسم المندوب</h2>
+      </div>
+      <button class="close-btn" onclick="closeSidebar()">×</button>
     </div>
     <p id="driverEmail"></p>
-    <!-- زر إنشاء حساب -->
-    <button class="nav-btn" onclick="openCreateAccountModal()" style="margin: 10px 0; background: #fff; color: var(--primary); border-radius: 8px; padding: 10px; width: 100%;">
+
+    <!-- زر الإشعارات -->
+    <button class="bn29 bn29-notification" onclick="closeSidebar(); setTimeout(openNotifications, 300);">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+      </svg>
+      الإشعارات
+    </button>
+
+    <!-- زر إنشاء حساب (اختياري) -->
+    <button class="bn29 bn29-create" onclick="openCreateAccountModal()">
+      <i class="fas fa-user-plus"></i>
       إنشاء حساب
     </button>
-    <!-- زر الحسابات المسجلة -->
-    <button class="nav-btn" onclick="showRegisteredAccounts()" style="margin: 10px 0; background: #e2e8f0; color: var(--text); border-radius: 8px; padding: 10px; width: 100%;">
+
+    <!-- زر الحسابات المسجلة (اختياري) -->
+    <button class="bn29 bn29-registered" onclick="closeSidebar(); openActiveAccounts()">
+      <i class="fas fa-users"></i>
       الحسابات المسجلة
     </button>
-    <button class="logout-btn" onclick="logout()">
+
+    <!-- زر تسجيل الخروج -->
+    <button class="bn29 bn29-logout" onclick="logout()">
       <i class="fas fa-sign-out-alt"></i>
       تسجيل الخروج
     </button>
   </aside>
 
-  <!-- الشريط العلوي -->
+  <!-- الشريط العلوي (Top Bar) -->
   <header class="top-bar">
     <h1>جايك للتوصيل السريع</h1>
     <button class="refresh-btn" onclick="location.reload()">تحديث</button>
   </header>
 
-  <!-- المحتوى الرئيسي -->
+  <!-- المحتوى الرئيسي (Main Content) -->
   <main class="main-content">
+    <!-- قسم الإحصائيات السريعة (Quick Stats) -->
+    <div class="quick-stats">
+      <div class="stat-card">
+        <h2 id="activeCount">0</h2>
+        <p>طلبات جديدة</p>
+      </div>
+      <div class="stat-card">
+        <h2 id="deliveringCount">0</h2>
+        <p>قيد التوصيل</p>
+      </div>
+      <div class="stat-card">
+        <h2 id="reportedCount">0</h2>
+        <p>طلبات مبلغة</p>
+      </div>
+      <div class="stat-card">
+        <h2 id="completedCount">0</h2>
+        <p>طلبات مكتملة</p>
+      </div>
+    </div>
+
+    <!-- تبويبات الحالة (Status Tabs) -->
     <div class="status-tabs">
-      <button class="tab-btn active" data-status="فعال">طلبات جديدة</button>
+      <button class="tab-btn " data-status="فعال">طلبات جديدة</button>
       <button class="tab-btn" data-status="قيد التوصيل">قيد التوصيل</button>
       <button class="tab-btn" data-status="مبلغة">طلبات مبلغة</button>
       <button class="tab-btn" data-status="مكتملة">طلبات مكتملة</button>
     </div>
 
+    <!-- قسم عرض الطلبات -->
     <section class="recent-orders">
-      <!-- حاوية البطاقات -->
-      <div id="ordersTableBody" class="orders-container"></div>
+      <div id="ordersTableBody" class="orders-container">
+        <!-- يتم عرض الطلبات عبر دوال جافاسكربت (main.js) -->
+      </div>
     </section>
   </main>
 
-  <!-- الشريط السفلي مع زر الإشعارات وباقي الأزرار -->
+  <!-- الشريط السفلي (Bottom Nav) -->
   <nav class="bottom-nav">
     <button class="nav-btn" onclick="openSidebar()">
       <i class="fas fa-bars"></i>
@@ -82,13 +361,88 @@
       <i class="fas fa-search"></i>
       <span>بحث</span>
     </button>
-    <!-- زر إحصائيات المندوب -->
     <button class="nav-btn" onclick="openDriverStatistics()">
       <i class="fas fa-chart-bar"></i>
       <span>إحصائيات</span>
     </button>
   </nav>
 
-<script src="main.js"></script>
+  <!-- ملف العمليات الرئيسية -->
+  <script src="scripts/main.js"></script>
+
+  <!-- جلب بيانات المندوب وعرض إحصائياته -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function(){
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+      if(currentUser && currentUser.type === "driver") {
+        // عرض الاسم والبريد
+        if(currentUser.name) {
+          document.getElementById("driverName").textContent = currentUser.name;
+        }
+        if(currentUser.email) {
+          document.getElementById("driverEmail").textContent = currentUser.email;
+        }
+        // تحميل الإحصائيات
+        loadDriverStats();
+      } else {
+        // إذا لم يكن هناك مستخدم مسجل أو لم يكن من نوع driver، إعادة التوجيه
+        firebase.auth().onAuthStateChanged(function(user){
+          if(!user) {
+            window.location.href = "index.html";
+          } else {
+            firebase.firestore().collection("drivers").doc(user.uid).get().then(doc => {
+              if(doc.exists) {
+                const data = doc.data();
+                document.getElementById("driverName").textContent = data.name || "مندوب";
+                document.getElementById("driverEmail").textContent = data.email || "";
+              } else {
+                // ليس مندوب
+                window.location.href = "index.html";
+              }
+            }).catch(err => {
+              console.error("Error fetching driver data:", err);
+              window.location.href = "index.html";
+            });
+          }
+        });
+      }
+    });
+
+    // دالة إحصائيات المندوب (تحسب عدد الطلبات لكل حالة) 
+    // إذا أردت قصرها على الطلبات التي يقودها هذا المندوب، استخدم شرط driverId
+    function loadDriverStats() {
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+      if(!currentUser || currentUser.type !== "driver") return;
+
+      firebase.firestore().collection("orders")
+
+        .get()
+        .then(snapshot => {
+          let activeCount = 0;
+          let deliveringCount = 0;
+          let reportedCount = 0;
+          let completedCount = 0;
+
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.status === "فعال") {
+              activeCount++;
+            } else if (data.status === "قيد التوصيل") {
+              deliveringCount++;
+            } else if (data.status === "مبلغة") {
+              reportedCount++;
+            } else if (data.status === "مكتملة") {
+              completedCount++;
+            }
+          });
+
+          document.getElementById("activeCount").textContent = activeCount;
+          document.getElementById("deliveringCount").textContent = deliveringCount;
+          document.getElementById("reportedCount").textContent = reportedCount;
+          document.getElementById("completedCount").textContent = completedCount;
+        })
+        .catch(err => console.error("Error fetching driver stats:", err));
+    }
+  </script>
 </body>
-</html>
+  </html>
