@@ -43,27 +43,30 @@
     button {
       width: 100%;
       padding: 12px;
-      background: #2563eb;
-      color: #fff;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      margin-top: 1rem;
       font-size: 16px;
       transition: 0.3s;
     }
-    button:hover {
+    /* زر تسجيل الدخول */
+    .login-btn {
+      background: #2563eb;
+      color: #fff;
+      margin-top: 1rem;
+    }
+    .login-btn:hover {
       opacity: 0.9;
     }
-    .create-account {
-      margin-top: 1.5rem;
-      text-align: center;
-      color: #64748b;
-    }
-    .create-account a {
+    /* زر نسيت كلمة المرور */
+    .forgot-btn {
+      background: #fff;
       color: #2563eb;
-      text-decoration: none;
-      font-weight: 500;
+      border: 2px solid ##770202;
+      margin-top: 0.5rem;
+    }
+    .forgot-btn:hover {
+      background: #f0f4f8;
     }
     .error-message {
       color: #dc2626;
@@ -80,13 +83,17 @@
       <input type="text" id="arabicName" placeholder="اسم المتجر/المندوب" required>
       <input type="email" id="email" placeholder="الإيميل" required>
       <input type="password" id="password" placeholder="كلمة المرور" required>
-      <button type="submit">تسجيل الدخول</button>
-      <div class="create-account">
-        <a href="#">نسيت كلمة المرور؟</a>
-      </div>
+
+      <!-- زر تسجيل الدخول -->
+      <button type="submit" class="login-btn">تسجيل الدخول</button>
+      <!-- زر نسيت كلمة المرور -->
+      <button type="button" class="forgot-btn" onclick="window.location.href='forgot.html'">
+        نسيت كلمة المرور ؟
+      </button>
     </form>
     <div id="errorMessage" class="error-message"></div>
   </div>
+
   <!-- مكتبات Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -95,6 +102,6 @@
   <!-- تحميل إعدادات Firebase -->
   <script src="scripts/firebase-config.js"></script>
   <!-- ملف العمليات الرئيسية -->
-<script src="main.js"></script> 
+  <script src="scripts/main.js"></script>
 </body>
 </html>
