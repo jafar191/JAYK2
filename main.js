@@ -1,6 +1,6 @@
 (function() {
   /******************************************************************
-   *               دوال عامة (نسخ رقم الطلب، إظهار خطأ، إلخ)
+   *                دوال عامة (نسخ رقم الطلب، إظهار الخطأ، إلخ)
    ******************************************************************/
   function copyOrderNumber(orderNumber) {
     if (navigator.clipboard && window.isSecureContext) {
@@ -329,6 +329,10 @@
     document.getElementById("storeName").textContent = currentUser.name;
     setupTabs();
     loadOrdersForMerchant();
+    const statsBtn = document.getElementById("openStatistics");
+    if (statsBtn) {
+      statsBtn.addEventListener("click", openStatistics);
+    }
   }
 
   function initDriverDashboard() {
@@ -372,13 +376,8 @@
       const count = snapshot.size;
       const originalText = tab.getAttribute("data-original-text") || tab.textContent;
       tab.setAttribute("data-original-text", originalText);
-      tab.innerHTML = originalText + ` <span class="counter">(${count})</span>`;
-      let color = "";
-      if (status === "فعال") color = "#3f4cdb";
-      else if (status === "قيد التوصيل") color = "lightgreen";
-      else if (status === "مبلغة") color = "red";
-      else if (status === "مكتملة") color = "green";
-      tab.style.backgroundColor = color;
+      tab.innerHTML = originalText + ` <span class="counter"></span>`;
+      
     }
   }
 
@@ -403,7 +402,6 @@
   async function loadOrdersForDriver() {
     const status = document.querySelector(".tab-btn.active")?.dataset.status || "فعال";
     try {
-      // المندوب يشاهد جميع الطلبات بغض النظر عن هوية المندوب لأن هناك مندوب واحد فقط
       const snapshot = await firebase.firestore().collection("orders")
         .where("status", "==", status)
         .get();
@@ -459,126 +457,135 @@
    *     إضافة طلب جديد (للتاجر) + إشعار "طلب جديد 🚀"
    ******************************************************************/
   window.openAddOrderModal = function () {
-    const modalHTML = `
-      <div class="modal-overlay" id="orderModal">
-        <div class="modal-content">
-          <h2>➕ إضافة طلب جديد</h2>
-          <form id="orderForm">
-            <div class="form-group">
-              <input type="text" id="customerName" placeholder="اسم الزبون" required>
-            </div>
-            <div class="form-group">
-              <input type="tel" id="customerPhone" placeholder="رقم الهاتف" pattern="07[0-9]{9}" required>
-            </div>
-            <div class="form-group">
-              <input type="text" id="customerAddress" placeholder="العنوان التفصيلي" required>
-            </div>
-            <div class="form-group">
-              <input type="number" id="itemCount" placeholder="عدد القطع" min="1" required>
-            </div>
-            <div class="form-group">
-              <input type="number" id="orderPrice" placeholder="سعر الطلب (دينار)" min="2000" required>
-              <div class="error-message" id="priceError"></div>
-            </div>
-            <div class="form-group">
-              <textarea id="orderNotes" placeholder="ملاحظات (اختياري)"></textarea>
-            </div>
-            <div class="modal-actions">
-              <button type="button" class="btn cancel" onclick="closeModal()">إلغاء</button>
-              <button type="submit" class="btn submit">حفظ الطلب</button>
-            </div>
-          </form>
-        </div>
+  const modalHTML = `
+    <div class="modal-overlay" id="orderModal">
+      <div class="modal-content">
+        <h2>➕ إضافة طلب جديد</h2>
+        <form id="orderForm">
+          <div class="form-group floating-label-group">
+            <input type="text" id="customerName" placeholder=" " required>
+            <label for="customerName">اسم الزبون</label>
+          </div>
+          <div class="form-group floating-label-group">
+            <input type="tel" id="customerPhone" placeholder=" " pattern="07[0-9]{9}" required>
+            <label for="customerPhone">رقم الهاتف</label>
+          </div>
+          <div class="form-group floating-label-group">
+            <input type="text" id="customerAddress" placeholder=" " required>
+            <label for="customerAddress">العنوان التفصيلي</label>
+          </div>
+          <div class="form-group floating-label-group">
+            <input type="number" id="itemCount" placeholder=" " min="1" required>
+            <label for="itemCount">عدد القطع</label>
+          </div>
+          <div class="form-group floating-label-group">
+            <input type="number" id="orderPrice" placeholder=" " min="2000" required>
+            <label for="orderPrice">سعر الطلب</label>
+            <div class="error-message" id="priceError"></div>
+          </div>
+          <div class="form-group floating-label-group">
+            <textarea id="orderNotes" placeholder=" "></textarea>
+            <label for="orderNotes">ملاحظات</label>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn cancel" onclick="closeModal()">إلغاء</button>
+            <button type="submit" class="btn submit">حفظ الطلب</button>
+          </div>
+        </form>
       </div>
-    `;
-    document.body.insertAdjacentHTML("beforeend", modalHTML);
-    document.getElementById("orderPrice").addEventListener("input", function (e) {
-      const priceError = document.getElementById("priceError");
-      priceError.textContent = e.target.value < 2000 ? "السعر يجب أن يكون 2000 دينار أو أكثر" : "";
-    });
-    document.getElementById("orderForm").addEventListener("submit", function (e) {
-      e.preventDefault();
-      handleOrderSubmission();
-    });
-  };
+    </div>
+  `;
+  document.body.insertAdjacentHTML("beforeend", modalHTML);
 
-  async function handleOrderSubmission() {
-    const orderPrice = document.getElementById("orderPrice");
+  // التحقق من سعر الطلب عند إدخاله
+  document.getElementById("orderPrice").addEventListener("input", function (e) {
     const priceError = document.getElementById("priceError");
-    if (orderPrice.value < 2000) {
-      priceError.textContent = "السعر يجب أن يكون 2000 دينار أو أكثر";
-      return;
-    }
-    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-    if (!currentUser || currentUser.type !== "merchant") {
-      alert("لا يمكنك إضافة طلب إلا إذا كنت تاجرًا!");
-      return;
-    }
-    const currentUserAuth = firebase.auth().currentUser;
-    if (!currentUserAuth) {
-      alert("يجب تسجيل الدخول أولاً!");
-      return;
-    }
+    priceError.textContent = e.target.value < 2000 ? "السعر يجب أن يكون 2000 دينار أو أكثر" : "";
+  });
 
-    // توليد رقم طلب تصاعدي
-    const counterRef = firebase.firestore().collection("counters").doc("ordersCounter");
-    let orderNumber;
-    await firebase.firestore().runTransaction(async (transaction) => {
-      const counterDoc = await transaction.get(counterRef);
-      if (!counterDoc.exists) {
-        orderNumber = 1;
-        transaction.set(counterRef, { count: 1 });
-      } else {
-        orderNumber = counterDoc.data().count + 1;
-        transaction.update(counterRef, { count: orderNumber });
-      }
-    });
+  // التعامل مع حدث إرسال النموذج
+  document.getElementById("orderForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    handleOrderSubmission();
+  });
+};
 
-    const newOrder = {
-      customerName: document.getElementById("customerName").value,
-      phone: document.getElementById("customerPhone").value,
-      address: document.getElementById("customerAddress").value,
-      items: document.getElementById("itemCount").value,
-      price: document.getElementById("orderPrice").value,
-      notes: document.getElementById("orderNotes").value || "لا يوجد ملاحظات",
-      status: "فعال",
-      driverId: "", // عند عدم تعيين مندوب (لأن المندوب الوحيد يستقبل جميع الطلبات)
-      storeName: currentUser.name,
-      merchantPhone: currentUser.phone,
-      merchantId: currentUser.uid,
-      deliveryAddress: currentUser.deliveryAddress || "",
-      date: firebase.firestore.FieldValue.serverTimestamp(),
-      messages: [],
-      orderNumber: orderNumber
-    };
-    try {
-      const orderRef = await firebase.firestore().collection("orders").add(newOrder);
-      closeModal();
-      loadOrdersForMerchant();
-      updateTabCounts();
-
-      // إرسال إشعار سحابي للمندوب عند إضافة طلب جديد (يُرسل لجميع المندوبين)
-      storeNotificationCloud(
-        "طلب جديد 🚀",
-        `تمت إضافة طلب من قبل ${currentUser.name}`,
-        { type: "newOrder", orderId: orderNumber || orderRef.id },
-        "driver"
-      );
-
-      Swal.fire({
-        icon: "success",
-        title: "تم إضافة الطلب بنجاح",
-        timer: 2000,
-        showConfirmButton: false
-      });
-    } catch (error) {
-      console.error("Error adding order:", error);
-    }
+async function handleOrderSubmission() {
+  const orderPriceInput = document.getElementById("orderPrice");
+  const priceError = document.getElementById("priceError");
+  if (orderPriceInput.value < 2000) {
+    priceError.textContent = "السعر يجب أن يكون 2000 دينار أو أكثر";
+    return;
   }
-  window.closeModal = function () {
-    const modal = document.getElementById("orderModal");
-    if(modal) modal.remove();
+
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  if (!currentUser || currentUser.type !== "merchant") {
+    alert("لا يمكنك إضافة طلب إلا إذا كنت تاجرًا!");
+    return;
+  }
+  const currentUserAuth = firebase.auth().currentUser;
+  if (!currentUserAuth) {
+    alert("يجب تسجيل الدخول أولاً!");
+    return;
+  }
+
+  const counterRef = firebase.firestore().collection("counters").doc("ordersCounter");
+  let orderNumber;
+  await firebase.firestore().runTransaction(async (transaction) => {
+    const counterDoc = await transaction.get(counterRef);
+    if (!counterDoc.exists) {
+      orderNumber = 1;
+      transaction.set(counterRef, { count: 1 });
+    } else {
+      orderNumber = counterDoc.data().count + 1;
+      transaction.update(counterRef, { count: orderNumber });
+    }
+  });
+
+  const newOrder = {
+    customerName: document.getElementById("customerName").value,
+    phone: document.getElementById("customerPhone").value,
+    address: document.getElementById("customerAddress").value,
+    items: document.getElementById("itemCount").value,
+    price: document.getElementById("orderPrice").value,
+    notes: document.getElementById("orderNotes").value || "لا يوجد ملاحظات",
+    status: "فعال",
+    driverId: "",
+    storeName: currentUser.name,
+    merchantPhone: currentUser.phone,
+    merchantId: currentUser.uid,
+    deliveryAddress: currentUser.deliveryAddress || "",
+    date: firebase.firestore.FieldValue.serverTimestamp(),
+    messages: [],
+    orderNumber: orderNumber
   };
+
+  try {
+    const orderRef = await firebase.firestore().collection("orders").add(newOrder);
+    closeModal();
+    loadOrdersForMerchant();
+    updateTabCounts();
+    storeNotificationCloud(
+      "طلب جديد 🚀",
+      `تمت إضافة طلب من قبل ${currentUser.name}`,
+      { type: "newOrder", orderId: orderNumber || orderRef.id },
+      "driver"
+    );
+    Swal.fire({
+      icon: "success",
+      title: "تم إضافة الطلب بنجاح",
+      timer: 2000,
+      showConfirmButton: false
+    });
+  } catch (error) {
+    console.error("Error adding order:", error);
+  }
+}
+
+window.closeModal = function () {
+  const modal = document.getElementById("orderModal");
+  if (modal) modal.remove();
+};
 
   /******************************************************************
    *   دوال للتواصل (مع المندوب أو التاجر) تظهر في كل الأقسام
@@ -639,105 +646,141 @@
 
   function renderOrderDetailsModal(order) {
     const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-
-    // تحضير تفاصيل الطلب الأساسية
+ // كائن يحدد اللون لكل حالة
+  const statusColors = {
+    "فعال": "#3f4cdb",         // أزرق
+    "قيد التوصيل": "25D366",
+    "مبلغة": "red",
+    "مكتملة": "green"
+  };
+  // إذا لم تكن الحالة ضمن الكائن، استخدم لون رمادي (#999)
+  const badgeColor = statusColors[order.status] || "#999";
     let detailsHTML = `
-      <div class="details-card">
-        <div class="details-card-header">
-          <h2>تفاصيل الطلب</h2>
+      <div class="order-details-modal" style="max-width: 450px; margin: auto; border-radius: 8px; overflow: hidden; font-family: 'Tajawal', sans-serif;">
+        <div class="modal-header" style="background: #2563eb; color: white; padding: 15px; text-align: center;">
+          <h2 style="margin: 0;">تفاصيل الطلب</h2>
         </div>
-        <div class="details-card-body">
-          <div class="detail-item">
-            <span class="detail-title">الزبون:</span>
-            <span class="detail-content">${order.customerName || 'بدون اسم'}</span>
+        <div class="modal-body" style="padding: 15px; background: #f9f9f9;">
+          <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <div style="flex: 1 1 45%;">
+              <p style="margin: 0; color: #555;"><strong>الزبون:</strong></p>
+              <p style="margin: 0; font-size: 16px;">${order.customerName || 'بدون اسم'}</p>
+            </div>
+            <div style="flex: 1 1 45%;">
+              <p style="margin: 0; color: #555;"><strong>عدد القطع:</strong></p>
+              <p style="margin: 0; font-size: 16px;">${order.items || 1}</p>
+            </div>
           </div>
-          <div class="detail-item">
-            <span class="detail-title">العنوان:</span>
-            <span class="detail-content">${order.address || 'لا يوجد عنوان'}</span>
+          <div style="margin-top: 10px;">
+            <p style="margin: 0; color: #555;"><strong>العنوان:</strong></p>
+            <p style="margin: 0; font-size: 16px;">${order.address || 'لا يوجد عنوان'}</p>
           </div>
-          <div class="detail-item">
-            <span class="detail-title">الهاتف:</span>
-            <a href="tel:${order.phone}" style="text-decoration: none; color: inherit;">
-              <span class="detail-content">${order.phone || 'غير متوفر'}</span>
-              <i class="fa fa-phone" style="margin-left: 5px;"></i>
-            </a>
+          <div style="margin-top: 10px;">
+            <p style="margin: 0; color: #555;"><strong>الهاتف:</strong></p>
+            <p style="margin: 0; font-size: 16px;">
+              <a href="tel:${order.phone}" style="color: #2563eb; text-decoration: none;">${order.phone || 'غير متوفر'}</a>
+            </p>
           </div>
-          <div class="detail-item">
-            <span class="detail-title">عدد القطع:</span>
-            <span class="detail-content">${order.items || 1}</span>
+          <div style="margin-top: 10px;">
+            <p style="margin: 0; color: #555;"><strong>السعر (مع التوصيل):</strong></p>
+            <p style="margin: 0; font-size: 16px;">${order.price || 0} IQD</p>
           </div>
-          <div class="detail-item">
-            <span class="detail-title">السعر (مع التوصيل):</span>
-            <span class="detail-content">${order.price || 0} IQD</span>
+          <div style="margin-top: 10px;">
+            <p style="margin: 0; color: #555;"><strong>الملاحظات:</strong></p>
+            <p style="margin: 0; font-size: 16px;">${order.notes || 'لا توجد ملاحظات'}</p>
           </div>
-          <div class="detail-item">
-            <span class="detail-title">الملاحظات:</span>
-            <span class="detail-content">${order.notes || 'لا توجد ملاحظات'}</span>
-          </div>
-        </div>
     `;
+    
 
-    // إذا كان المستخدم مندوبًا، أضف تفاصيل المتجر مع عنوان الاستلام
     if (currentUser.type === "driver") {
       detailsHTML += `
-        <div class="details-card-body">
-          <div class="detail-item">
-            <span class="detail-title">اسم المتجر:</span>
-            <span class="detail-content">${order.storeName || 'غير متوفر'}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-title">هاتف المتجر:</span>
-            <a href="tel:${order.merchantPhone}" style="text-decoration: none; color: inherit;">
-              <span class="detail-content">${order.merchantPhone || 'غير متوفر'}</span>
-              <i class="fa fa-phone" style="margin-left: 5px;"></i>
-            </a>
-          </div>
-          <div class="detail-item">
-            <span class="detail-title">عنوان الاستلام:</span>
-            <span class="detail-content">${order.deliveryAddress || 'غير متوفر'}</span>
-          </div>
+        <div style="margin-top: 10px; border-top: 1px solid #ddd; padding-top: 10px;">
+          <p style="margin: 0; color: #555;"><strong>اسم المتجر:</strong></p>
+          <p style="margin: 0; font-size: 16px;">${order.storeName || 'غير متوفر'}</p>
+        </div>
+        <div style="margin-top: 10px;">
+          <p style="margin: 0; color: #555;"><strong>هاتف المتجر:</strong></p>
+          <p style="margin: 0; font-size: 16px;">
+            <a href="tel:${order.merchantPhone}" style="color: #2563eb; text-decoration: none;">${order.merchantPhone || 'غير متوفر'}</a>
+          </p>
+        </div>
+        <div style="margin-top: 10px;">
+          <p style="margin: 0; color: #555;"><strong>عنوان الاستلام:</strong></p>
+          <p style="margin: 0; font-size: 16px;">${order.deliveryAddress || 'غير متوفر'}</p>
         </div>
       `;
     }
-
-    // في حال الطلب مبلّغ، أضف تفاصيل التبليغ
-    if (order.status === "مبلغة") {
+// حقل حالة الطلب بشكل بادج ملوّن
+  detailsHTML += `
+      <div style="margin-top: 10px; border-top: 1px solid #ddd; padding-top: 10px;">
+        <p style="margin: 0; color: #555;"><strong>حالة الطلب:</strong></p>
+        <div style="
+          display: inline-block;
+          padding: 0.3rem 0.8rem;
+          border-radius: 20px;
+          font-size: 0.9rem;
+          font-weight: 600;
+          margin: 5px 0 0 0;
+          color: #fff;
+          background-color: ${badgeColor};
+        ">
+          ${order.status || 'غير متوفر'}
+        </div>
+      </div>
+  `;
+  if (order.status === "مبلغة") {
       detailsHTML += `
-        <div class="report-info">
-          <p><strong>سبب التبليغ:</strong> ${order.reportReason || 'غير متوفر'}</p>
-          <p><strong>ملاحظات التبليغ:</strong> ${order.reportNotes || 'لا توجد ملاحظات'}</p>
+        <div style="margin-top: 10px; border-top: 1px solid #ddd; padding-top: 10px; background: #fff0f0; border-radius: 4px;">
+          <p style="margin: 0; color: #d32f2f;"><strong>سبب التبليغ:</strong> ${order.reportReason || 'غير متوفر'}</p>
+          <p style="margin: 0; color: #d32f2f;"><strong>ملاحظات التبليغ:</strong> ${order.reportNotes || 'لا توجد ملاحظات'}</p>
         </div>
       `;
     }
 
-    detailsHTML += `<div class="details-actions">`;
+    detailsHTML += `
+        </div>
+        <div class="modal-footer" style="padding: 10px; background: #f1f1f1; text-align: center;">
+    `;
 
-    // أزرار التاجر
-    if (currentUser.type === "merchant") {
+    // عرض أزرار حسب نوع المستخدم وحالة الطلب
+    if (currentUser.type === "driver") {
       if (order.status === "فعال") {
         detailsHTML += `
-          <button id="editOrderBtn" class="action-btn edit">تعديل الطلب</button>
-          <button id="deleteOrderBtn" class="action-btn delete">حذف الطلب</button>
+          <button id="acceptOrderBtn" class="action-btn accept" style="margin: 5px; padding: 10px 20px; background: #17a2b8; border: none; border-radius: 4px; color: white;">استلام الطلب</button>
+          <button id="contactMerchantBtn" class="action-btn contact" style="margin: 5px; padding: 10px 20px; background: #25D366; border: none; border-radius: 4px; color: white;">تواصل مع التاجر</button>
+          <button id="closeModalBtn" class="action-btn close" style="margin: 5px; padding: 10px 20px; background: #6c757d; border: none; border-radius: 4px; color: white;">إغلاق</button>
+        `;
+      } else if (order.status === "قيد التوصيل" || order.status === "مبلغة") {
+        detailsHTML += `
+          <button id="reportOrderBtn" class="action-btn report" style="margin: 5px; padding: 10px 20px; background: #ffc107; border: none; border-radius: 4px; color: white;">تبليغ</button>
+          <button id="deliveredBtn" class="action-btn delivered" style="margin: 5px; padding: 10px 20px; background: #28a745; border: none; border-radius: 4px; color: white;">تم التوصيل</button>
+          <button id="contactMerchantBtn" class="action-btn contact" style="margin: 5px; padding: 10px 20px; background: #25D366; border: none; border-radius: 4px; color: white;">تواصل مع التاجر</button>
+          <button id="closeModalBtn" class="action-btn close" style="margin: 5px; padding: 10px 20px; background: #6c757d; border: none; border-radius: 4px; color: white;">إغلاق</button>
+        `;
+      } else if (order.status === "مكتملة") {
+        detailsHTML += `
+          <button id="reportOrderBtn" class="action-btn report" style="margin: 5px; padding: 10px 20px; background: #ffc107; border: none; border-radius: 4px; color: white;">تبليغ</button>
+          <button id="contactMerchantBtn" class="action-btn contact" style="margin: 5px; padding: 10px 20px; background: #25D366; border: none; border-radius: 4px; color: white;">تواصل مع التاجر</button>
+          <button id="closeModalBtn" class="action-btn close" style="margin: 5px; padding: 10px 20px; background: #6c757d; border: none; border-radius: 4px; color: white;">إغلاق</button>
+        `;
+      } else {
+        detailsHTML += `
+          <button id="closeModalBtn" class="action-btn close" style="margin: 5px; padding: 10px 20px; background: #6c757d; border: none; border-radius: 4px; color: white;">إغلاق</button>
+        `;
+      }
+    } else {
+      if (order.status === "فعال") {
+        detailsHTML += `
+          <button id="editOrderBtn" class="action-btn edit" style="margin: 5px; padding: 10px 20px; background: #007bff; border: none; border-radius: 4px; color: white;">تعديل الطلب</button>
+          <button id="deleteOrderBtn" class="action-btn delete" style="margin: 5px; padding: 10px 20px; background: #dc3545; border: none; border-radius: 4px; color: white;">حذف الطلب</button>
         `;
       }
       if (order.status === "مبلغة") {
-        detailsHTML += `<button id="processOrderBtn" class="action-btn process">معالجة الطلب</button>`;
+        detailsHTML += `<button id="processOrderBtn" class="action-btn process" style="margin: 5px; padding: 10px 20px; background: #20c997; border: none; border-radius: 4px; color: white;">معالجة الطلب</button>`;
       }
       detailsHTML += `
-        <button id="contactDriverBtn" class="action-btn contact">تواصل مع المندوب</button>
-        <button id="closeModalBtn" class="action-btn close">إغلاق</button>
-      `;
-    }
-    // أزرار المندوب
-    else {
-      if (order.status === "فعال") {
-        detailsHTML += `<button id="acceptOrderBtn" class="action-btn accept">استلام الطلب</button>`;
-      }
-      detailsHTML += `
-        <button id="reportOrderBtn" class="action-btn report">تبليغ</button>
-        <button id="deliveredBtn" class="action-btn delivered">تم التوصيل</button>
-        <button id="contactMerchantBtn" class="action-btn contact">تواصل مع التاجر</button>
-        <button id="closeModalBtn" class="action-btn close">إغلاق</button>
+        <button id="contactDriverBtn" class="action-btn contact" style="margin: 5px; padding: 10px 20px; background: #25D366; border: none; border-radius: 4px; color: white;">تواصل مع المندوب</button>
+        <button id="closeModalBtn" class="action-btn close" style="margin: 5px; padding: 10px 20px; background: #6c757d; border: none; border-radius: 4px; color: white;">إغلاق</button>
       `;
     }
 
@@ -745,311 +788,341 @@
 
     Swal.fire({
       html: detailsHTML,
-      showConfirmButton: false
+      showConfirmButton: false,
+      customClass: {
+        popup: 'swal2-popup-custom'
+      }
     });
 
-    // ربط الأحداث بالأزرار بعد تأخير بسيط
     setTimeout(() => {
       const closeBtn = document.getElementById("closeModalBtn");
       if (closeBtn) {
-        closeBtn.addEventListener("click", () => {
-          Swal.close();
-        });
+        closeBtn.addEventListener("click", () => { Swal.close(); });
       }
-
       if (currentUser.type === "merchant") {
         const editOrderBtn = document.getElementById("editOrderBtn");
         if (editOrderBtn) {
-          editOrderBtn.addEventListener("click", () => {
-            openEditOrderModal(order);
-          });
+          editOrderBtn.addEventListener("click", () => { openEditOrderModal(order); });
         }
         const deleteOrderBtn = document.getElementById("deleteOrderBtn");
         if (deleteOrderBtn) {
-          deleteOrderBtn.addEventListener("click", () => {
-            deleteOrder(order.id);
-          });
+          deleteOrderBtn.addEventListener("click", () => { deleteOrder(order.id); });
         }
         const processOrderBtn = document.getElementById("processOrderBtn");
         if (processOrderBtn) {
-          processOrderBtn.addEventListener("click", () => {
-            openProcessReportedOrderModal(order);
-          });
+          processOrderBtn.addEventListener("click", () => { openProcessReportedOrderModal(order); });
         }
         const contactDriverBtn = document.getElementById("contactDriverBtn");
         if (contactDriverBtn) {
-          contactDriverBtn.addEventListener("click", () => {
-            contactDriver(order.driverPhone || "+9647855874757");
-          });
+          contactDriverBtn.addEventListener("click", () => { contactDriver(order.driverPhone || "+9647855874757"); });
         }
       } else {
-        const acceptOrderBtn = document.getElementById("acceptOrderBtn");
-        if (acceptOrderBtn) {
-          acceptOrderBtn.addEventListener("click", () => {
-            firebase.firestore().collection("orders").doc(order.id).update({ status: "قيد التوصيل" })
-              .then(() => {
-                storeNotificationCloud(
-                  "تحديث حالة الطلب",
-                  "تم استلام الطلب وأصبح قيد التوصيل",
-                  { type: "statusUpdate", orderId: order.id },
-                  "merchant",
-                  order.merchantId
-                );
-                Swal.fire("تم", "تم استلام الطلب وأصبح قيد التوصيل", "success");
-                loadOrdersForDriver();
-              })
-              .catch(() => { Swal.fire("خطأ", "حدث خطأ أثناء تحديث حالة الطلب", "error"); });
-          });
-        }
-        const reportOrderBtn = document.getElementById("reportOrderBtn");
-        if (reportOrderBtn) {
-          reportOrderBtn.addEventListener("click", () => {
-            openReportModal(order);
-          });
-        }
-        const deliveredBtn = document.getElementById("deliveredBtn");
-        if (deliveredBtn) {
-          deliveredBtn.addEventListener("click", () => {
-            Swal.fire({
-              title: "تم التوصيل",
-              html: `<textarea id="deliveredNotes" class="swal2-textarea" placeholder="أدخل ملاحظات إن وجدت"></textarea>`,
-              showCancelButton: true,
-              confirmButtonText: "إرسال"
-            }).then((result) => {
-              if (result.isConfirmed) {
-                const notes = document.getElementById("deliveredNotes").value;
-                firebase.firestore().collection("orders").doc(order.id).update({
-                  status: "مكتملة",
-                  deliveredNotes: notes
-                }).then(() => {
+        if (currentUser.type === "driver") {
+          const acceptOrderBtn = document.getElementById("acceptOrderBtn");
+          if (acceptOrderBtn) {
+            acceptOrderBtn.addEventListener("click", () => {
+              const estimatedTime = new Date(Date.now() + 30 * 60000);
+              const hours = estimatedTime.getHours();
+              const minutes = estimatedTime.getMinutes();
+              const formattedTime =
+                (hours < 10 ? "0" + hours : hours) +
+                ":" +
+                (minutes < 10 ? "0" + minutes : minutes);
+              let customerPhone = order.phone || "";
+              if (customerPhone.startsWith("0")) {
+                customerPhone = "+964" + customerPhone.substring(1);
+              }
+              const messageText = `مرحبا معكم شركة جايك للتوصيل السريع\n` +
+                                  `لديكم طلب توصيل\n` +
+                                  `نعتذر عن الازعاج، هذه الرسالة تلقائية`;
+              firebase.firestore().collection("orders").doc(order.id).update({ status: "قيد التوصيل" })
+                .then(() => {
                   storeNotificationCloud(
-                    "أشعار السعادة 😁",
-                    `تم تسليم الطلب الى الزبون (رقم ${order.orderNumber || order.id})`,
-                    { type: "happiness", orderId: order.id },
+                    "تحديث حالة الطلب",
+                    "تم استلام الطلب وأصبح قيد التوصيل",
+                    { type: "statusUpdate", orderId: order.id },
                     "merchant",
                     order.merchantId
                   );
-                  Swal.fire("تم", "تم تحديث حالة الطلب", "success");
-                  loadOrdersForDriver();
+                  const whatsappURL = `intent://send?phone=${customerPhone}&text=${encodeURIComponent(messageText)}#Intent;package=com.whatsapp.w4b;scheme=whatsapp;end;`;
+                  window.location.href = whatsappURL;
                 })
-                .catch(() => { Swal.fire("خطأ", "حدث خطأ أثناء تحديث حالة الطلب", "error"); });
-              }
+                .catch(() => {
+                  Swal.fire("خطأ", "حدث خطأ أثناء تحديث حالة الطلب", "error");
+                });
             });
-          });
-        }
-        const contactMerchantBtn = document.getElementById("contactMerchantBtn");
-        if (contactMerchantBtn) {
-          contactMerchantBtn.addEventListener("click", () => {
-            contactMerchant(order.merchantPhone);
-          });
+          }
+          const reportOrderBtn = document.getElementById("reportOrderBtn");
+          if (reportOrderBtn) {
+            reportOrderBtn.addEventListener("click", () => { openReportModal(order); });
+          }
+          const deliveredBtn = document.getElementById("deliveredBtn");
+          if (deliveredBtn) {
+            deliveredBtn.addEventListener("click", () => {
+              Swal.fire({
+                title: "تم التوصيل",
+                html: `<textarea id="deliveredNotes" class="swal2-textarea" placeholder="أدخل ملاحظات إن وجدت"></textarea>`,
+                showCancelButton: true,
+                confirmButtonText: "إرسال"
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  const notes = document.getElementById("deliveredNotes").value;
+                  firebase.firestore().collection("orders").doc(order.id).update({
+                    status: "مكتملة",
+                    deliveredNotes: notes
+                  }).then(() => {
+                    storeNotificationCloud(
+                      "أشعار السعادة 😁",
+                      `تم تسليم الطلب الى الزبون (رقم ${order.orderNumber || order.id})`,
+                      { type: "happiness", orderId: order.id },
+                      "merchant",
+                      order.merchantId
+                    );
+                    Swal.fire("تم", "تم تحديث حالة الطلب", "success");
+                    loadOrdersForDriver();
+                  })
+                  .catch(() => { Swal.fire("خطأ", "حدث خطأ أثناء تحديث حالة الطلب", "error"); });
+                }
+              });
+            });
+          }
+          const contactMerchantBtn = document.getElementById("contactMerchantBtn");
+          if (contactMerchantBtn) {
+            contactMerchantBtn.addEventListener("click", () => { contactMerchant(order.merchantPhone); });
+          }
         }
       }
     }, 200);
   }
   window.renderOrderDetailsModal = renderOrderDetailsModal;
 
-  /******************************************************************
-   *        تعديل تفاصيل الطلب + معالجة الطلب المبلّغ
-   ******************************************************************/
-  function openEditOrderModal(order) {
-    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-    let editModalHTML = "";
-    if (currentUser.type === "merchant") {
-      editModalHTML = `
-        <div class="modal-overlay" id="editOrderModal">
-          <div class="modal-content">
-            <h2>تعديل تفاصيل الطلب</h2>
-            <form id="editOrderForm">
-              <div class="form-group">
-                <input type="text" id="editCustomerName" placeholder="اسم الزبون" value="${order.customerName}" required>
-              </div>
-              <div class="form-group">
-                <input type="tel" id="editCustomerPhone" placeholder="رقم الهاتف" value="${order.phone || ''}" required>
-              </div>
-              <div class="form-group">
-                <input type="text" id="editCustomerAddress" placeholder="العنوان" value="${order.address || ''}" required>
-              </div>
-              <div class="form-group">
-                <input type="number" id="editItemCount" placeholder="عدد القطع" value="${order.items}" min="1" required>
-              </div>
-              <div class="form-group">
-                <input type="number" id="editOrderPrice" placeholder="سعر الطلب" value="${order.price}" min="2000" required>
-              </div>
-              <div class="form-group">
-                <textarea id="editOrderNotes" placeholder="ملاحظات (اختياري)">${order.notes || ''}</textarea>
-              </div>
-              <div class="modal-actions">
-                <button type="button" class="btn cancel" onclick="closeEditModal()">إلغاء</button>
-                <button type="submit" class="btn submit">حفظ التعديلات</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      `;
-    } else if (currentUser.type === "driver") {
-      editModalHTML = `
-        <div class="modal-overlay" id="editOrderModal">
-          <div class="modal-content">
-            <h2>تعديل الطلب</h2>
-            <form id="editOrderForm">
-              <div class="form-group">
-                <input type="text" id="editCustomerName" placeholder="اسم الزبون" value="${order.customerName}" required>
-              </div>
-              <div class="form-group">
-                <input type="tel" id="editCustomerPhone" placeholder="رقم الهاتف" value="${order.phone || ''}" required>
-              </div>
-              <div class="form-group">
-                <input type="text" id="editCustomerAddress" placeholder="العنوان" value="${order.address || ''}" required>
-              </div>
-              <div class="form-group">
-                <input type="number" id="editItemCount" placeholder="عدد القطع" value="${order.items}" min="1" required>
-              </div>
-              <div class="form-group">
-                <input type="number" id="editOrderPrice" placeholder="سعر الطلب" value="${order.price}" min="2000" required>
-              </div>
-              <div class="form-group">
-                <textarea id="editOrderNotes" placeholder="ملاحظات (اختياري)">${order.notes || ''}</textarea>
-              </div>
-              <div class="form-group">
-                <input type="text" id="editOrderStatus" placeholder="الحالة" value="${order.status}" required>
-              </div>
-              <div class="form-group">
-                <textarea id="editReportNotes" placeholder="ملاحظات التبليغ (اختياري)">${order.reportNotes || ''}</textarea>
-              </div>
-              <div class="modal-actions">
-                <button type="button" class="btn cancel" onclick="closeEditModal()">إلغاء</button>
-                <button type="submit" class="btn submit">حفظ التعديلات</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      `;
-    }
-    document.body.insertAdjacentHTML("beforeend", editModalHTML);
-    document.getElementById("editOrderForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      handleEditOrderSubmission(order.id);
-    });
-  }
-  function closeEditModal() { 
-    const modal = document.getElementById("editOrderModal"); 
-    if(modal) modal.remove(); 
-  }
-  window.closeEditModal = closeEditModal;
+/******************************************************************
+ * تعديل تفاصيل الطلب + معالجة الطلب المبلّغ باستخدام Floating Label
+ ******************************************************************/
 
-  async function handleEditOrderSubmission(orderId) {
-    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-    let updatedOrder = {
-      customerName: document.getElementById("editCustomerName").value,
-      phone: document.getElementById("editCustomerPhone").value,
-      address: document.getElementById("editCustomerAddress").value,
-      items: document.getElementById("editItemCount").value,
-      price: document.getElementById("editOrderPrice").value,
-      notes: document.getElementById("editOrderNotes").value || "لا يوجد ملاحظات"
-    };
-    if (currentUser.type === "driver") {
-      updatedOrder.status = document.getElementById("editOrderStatus").value;
-      updatedOrder.reportNotes = document.getElementById("editReportNotes").value || "";
-    }
-    try {
-      await firebase.firestore().collection("orders").doc(orderId).update(updatedOrder);
-      Swal.fire("تم", "تم تحديث تفاصيل الطلب", "success");
-      closeEditModal();
-      Swal.close();
-      if (currentUser.type === "merchant") { 
-        loadOrdersForMerchant(); 
-      } else { 
-        loadOrdersForDriver(); 
-      }
-      updateTabCounts();
-    } catch {
-      Swal.fire("خطأ", "حدث خطأ أثناء تحديث تفاصيل الطلب", "error");
-    }
-  }
-
-  function openProcessReportedOrderModal(order) {
-    const modalHTML = `
-      <div class="modal-overlay" id="processOrderModal">
+// دالة فتح نافذة تعديل الطلب
+function openEditOrderModal(order) {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  let editModalHTML = "";
+  if (currentUser.type === "merchant") {
+    editModalHTML = `
+      <div class="modal-overlay" id="editOrderModal">
         <div class="modal-content">
-          <h2>معالجة الطلب</h2>
-          <form id="processOrderForm">
-            <div class="form-group">
-              <input type="text" id="processCustomerName" placeholder="اسم الزبون" value="${order.customerName}" required>
+          <h2>تعديل تفاصيل الطلب</h2>
+          <form id="editOrderForm">
+            <div class="form-group floating-label-group">
+              <input type="text" id="editCustomerName" placeholder=" " value="${order.customerName}" required>
+              <label for="editCustomerName">اسم الزبون</label>
             </div>
-            <div class="form-group">
-              <input type="tel" id="processCustomerPhone" placeholder="رقم الهاتف" value="${order.phone || ''}" required>
+            <div class="form-group floating-label-group">
+              <input type="tel" id="editCustomerPhone" placeholder=" " value="${order.phone || ''}" required>
+              <label for="editCustomerPhone">رقم الهاتف</label>
             </div>
-            <div class="form-group">
-              <input type="text" id="processCustomerAddress" placeholder="العنوان" value="${order.address || ''}" required>
+            <div class="form-group floating-label-group">
+              <input type="text" id="editCustomerAddress" placeholder=" " value="${order.address || ''}" required>
+              <label for="editCustomerAddress">العنوان</label>
             </div>
-            <div class="form-group">
-              <input type="number" id="processItemCount" placeholder="عدد القطع" value="${order.items}" required min="1">
+            <div class="form-group floating-label-group">
+              <input type="number" id="editItemCount" placeholder=" " value="${order.items}" min="1" required>
+              <label for="editItemCount">عدد القطع</label>
             </div>
-            <div class="form-group">
-              <input type="number" id="processOrderPrice" placeholder="سعر الطلب" value="${order.price}" required min="2000">
-              <div class="error-message" id="processPriceError"></div>
+            <div class="form-group floating-label-group">
+              <input type="number" id="editOrderPrice" placeholder=" " value="${order.price}" min="2000" required>
+              <label for="editOrderPrice">سعر الطلب</label>
             </div>
-            <div class="form-group">
-              <textarea id="processOrderNotes" placeholder="ملاحظات (اختياري)">${order.notes || ''}</textarea>
+            <div class="form-group floating-label-group">
+              <textarea id="editOrderNotes" placeholder=" ">${order.notes || ''}</textarea>
+              <label for="editOrderNotes">ملاحظات</label>
             </div>
             <div class="modal-actions">
-              <button type="button" class="btn cancel" onclick="closeProcessOrderModal()">إلغاء</button>
+              <button type="button" class="btn cancel" onclick="closeEditModal()">إلغاء</button>
               <button type="submit" class="btn submit">حفظ التعديلات</button>
             </div>
           </form>
         </div>
       </div>
     `;
-    document.body.insertAdjacentHTML("beforeend", modalHTML);
-    document.getElementById("processOrderPrice").addEventListener("input", function(e) {
-      const errorDiv = document.getElementById("processPriceError");
-      errorDiv.textContent = e.target.value < 2000 ? "السعر يجب أن يكون 2000 دينار أو أكثر" : "";
-    });
-    document.getElementById("processOrderForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      handleProcessReportedOrderSubmission(order);
-    });
+  } else if (currentUser.type === "driver") {
+    editModalHTML = `
+      <div class="modal-overlay" id="editOrderModal">
+        <div class="modal-content">
+          <h2>تعديل الطلب</h2>
+          <form id="editOrderForm">
+            <div class="form-group floating-label-group">
+              <input type="text" id="editCustomerName" placeholder=" " value="${order.customerName}" required>
+              <label for="editCustomerName">اسم الزبون</label>
+            </div>
+            <div class="form-group floating-label-group">
+              <input type="tel" id="editCustomerPhone" placeholder=" " value="${order.phone || ''}" required>
+              <label for="editCustomerPhone">رقم الهاتف</label>
+            </div>
+            <div class="form-group floating-label-group">
+              <input type="text" id="editCustomerAddress" placeholder=" " value="${order.address || ''}" required>
+              <label for="editCustomerAddress">العنوان</label>
+            </div>
+            <div class="form-group floating-label-group">
+              <input type="number" id="editItemCount" placeholder=" " value="${order.items}" min="1" required>
+              <label for="editItemCount">عدد القطع</label>
+            </div>
+            <div class="form-group floating-label-group">
+              <input type="number" id="editOrderPrice" placeholder=" " value="${order.price}" min="2000" required>
+              <label for="editOrderPrice">سعر الطلب</label>
+            </div>
+            <div class="form-group floating-label-group">
+              <textarea id="editOrderNotes" placeholder=" ">${order.notes || ''}</textarea>
+              <label for="editOrderNotes">ملاحظات</label>
+            </div>
+            <div class="form-group floating-label-group">
+              <input type="text" id="editOrderStatus" placeholder=" " value="${order.status}" required>
+              <label for="editOrderStatus">الحالة</label>
+            </div>
+            <div class="form-group floating-label-group">
+              <textarea id="editReportNotes" placeholder=" ">${order.reportNotes || ''}</textarea>
+              <label for="editReportNotes">ملاحظات التبليغ (اختياري)</label>
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn cancel" onclick="closeEditModal()">إلغاء</button>
+              <button type="submit" class="btn submit">حفظ التعديلات</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
   }
-  window.openProcessReportedOrderModal = openProcessReportedOrderModal;
+  document.body.insertAdjacentHTML("beforeend", editModalHTML);
+  document.getElementById("editOrderForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    handleEditOrderSubmission(order.id);
+  });
+}
 
-  function closeProcessOrderModal() {
-    const modal = document.getElementById("processOrderModal");
-    if(modal) modal.remove();
+function closeEditModal() {
+  const modal = document.getElementById("editOrderModal");
+  if (modal) modal.remove();
+}
+window.closeEditModal = closeEditModal;
+
+// دالة تحديث تفاصيل الطلب بعد التعديل
+async function handleEditOrderSubmission(orderId) {
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  let updatedOrder = {
+    customerName: document.getElementById("editCustomerName").value,
+    phone: document.getElementById("editCustomerPhone").value,
+    address: document.getElementById("editCustomerAddress").value,
+    items: document.getElementById("editItemCount").value,
+    price: document.getElementById("editOrderPrice").value,
+    notes: document.getElementById("editOrderNotes").value || "لا يوجد ملاحظات"
+  };
+  if (currentUser.type === "driver") {
+    updatedOrder.status = document.getElementById("editOrderStatus").value;
+    updatedOrder.reportNotes = document.getElementById("editReportNotes").value || "";
   }
-  window.closeProcessOrderModal = closeProcessOrderModal;
-
-  async function handleProcessReportedOrderSubmission(order) {
-    const updatedOrder = {
-      customerName: document.getElementById("processCustomerName").value,
-      phone: document.getElementById("processCustomerPhone").value,
-      address: document.getElementById("processCustomerAddress").value,
-      items: document.getElementById("processItemCount").value,
-      price: document.getElementById("processOrderPrice").value,
-      notes: document.getElementById("processOrderNotes").value || "لا يوجد ملاحظات",
-      status: "قيد التوصيل"
-    };
-    try {
-      await firebase.firestore().collection("orders").doc(order.id).update(updatedOrder);
-      storeNotificationCloud(
-        "تمت معالجة طلب من قبل التاجر",
-        `تمت معالجة الطلب رقم (${order.orderNumber || order.id})`,
-        { type: "processed", orderId: order.id },
-        "driver"
-      );
-      Swal.fire("تم", "تم معالجة الطلب وأصبح في قسم قيد التوصيل", "success");
-      closeProcessOrderModal();
-      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-      if (currentUser.type === "merchant") {
-        loadOrdersForMerchant();
-      } else {
-        loadOrdersForDriver();
-      }
-      updateTabCounts();
-    } catch {
-      Swal.fire("خطأ", "حدث خطأ أثناء معالجة الطلب", "error");
+  try {
+    await firebase.firestore().collection("orders").doc(orderId).update(updatedOrder);
+    Swal.fire("تم", "تم تحديث تفاصيل الطلب", "success");
+    closeEditModal();
+    Swal.close();
+    if (currentUser.type === "merchant") {
+      loadOrdersForMerchant();
+    } else {
+      loadOrdersForDriver();
     }
+    updateTabCounts();
+  } catch {
+    Swal.fire("خطأ", "حدث خطأ أثناء تحديث تفاصيل الطلب", "error");
   }
+}
 
+// دالة فتح نافذة معالجة الطلب المبلّغ باستخدام Floating Label
+function openProcessReportedOrderModal(order) {
+  const modalHTML = `
+    <div class="modal-overlay" id="processOrderModal">
+      <div class="modal-content">
+        <h2>معالجة الطلب</h2>
+        <form id="processOrderForm">
+          <div class="form-group floating-label-group">
+            <input type="text" id="processCustomerName" placeholder=" " value="${order.customerName}" required>
+            <label for="processCustomerName">اسم الزبون</label>
+          </div>
+          <div class="form-group floating-label-group">
+            <input type="tel" id="processCustomerPhone" placeholder=" " value="${order.phone || ''}" required>
+            <label for="processCustomerPhone">رقم الهاتف</label>
+          </div>
+          <div class="form-group floating-label-group">
+            <input type="text" id="processCustomerAddress" placeholder=" " value="${order.address || ''}" required>
+            <label for="processCustomerAddress">العنوان</label>
+          </div>
+          <div class="form-group floating-label-group">
+            <input type="number" id="processItemCount" placeholder=" " value="${order.items}" required min="1">
+            <label for="processItemCount">عدد القطع</label>
+          </div>
+          <div class="form-group floating-label-group">
+            <input type="number" id="processOrderPrice" placeholder=" " value="${order.price}" required min="2000">
+            <label for="processOrderPrice">سعر الطلب</label>
+            <div class="error-message" id="processPriceError"></div>
+          </div>
+          <div class="form-group floating-label-group">
+            <textarea id="processOrderNotes" placeholder=" ">${order.notes || ''}</textarea>
+            <label for="processOrderNotes">ملاحظات</label>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn cancel" onclick="closeProcessOrderModal()">إلغاء</button>
+            <button type="submit" class="btn submit">حفظ التعديلات</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML("beforeend", modalHTML);
+  document.getElementById("processOrderPrice").addEventListener("input", function (e) {
+    const errorDiv = document.getElementById("processPriceError");
+    errorDiv.textContent = e.target.value < 2000 ? "السعر يجب أن يكون 2000 دينار أو أكثر" : "";
+  });
+  document.getElementById("processOrderForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    handleProcessReportedOrderSubmission(order);
+  });
+}
+window.openProcessReportedOrderModal = openProcessReportedOrderModal;
+
+function closeProcessOrderModal() {
+  const modal = document.getElementById("processOrderModal");
+  if (modal) modal.remove();
+}
+window.closeProcessOrderModal = closeProcessOrderModal;
+
+// دالة معالجة الطلب المبلّغ بعد تعديل البيانات
+async function handleProcessReportedOrderSubmission(order) {
+  const updatedOrder = {
+    customerName: document.getElementById("processCustomerName").value,
+    phone: document.getElementById("processCustomerPhone").value,
+    address: document.getElementById("processCustomerAddress").value,
+    items: document.getElementById("processItemCount").value,
+    price: document.getElementById("processOrderPrice").value,
+    notes: document.getElementById("processOrderNotes").value || "لا يوجد ملاحظات",
+    status: "قيد التوصيل"
+  };
+  try {
+    await firebase.firestore().collection("orders").doc(order.id).update(updatedOrder);
+    storeNotificationCloud(
+      "تمت معالجة طلب من قبل التاجر",
+      `تمت معالجة الطلب رقم (${order.orderNumber || order.id})`,
+      { type: "processed", orderId: order.id },
+      "driver"
+    );
+    Swal.fire("تم", "تم معالجة الطلب بنجاح", "success");
+    closeProcessOrderModal();
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    if (currentUser.type === "merchant") {
+      loadOrdersForMerchant();
+    } else {
+      loadOrdersForDriver();
+    }
+    updateTabCounts();
+  } catch {
+    Swal.fire("خطأ", "حدث خطأ أثناء معالجة الطلب", "error");
+  }
+}
   /******************************************************************
    *                 حذف الطلب + تبليغ الطلب
    ******************************************************************/
@@ -1435,186 +1508,442 @@
   }
 
   /******************************************************************
-   *           تشغيل الدوال عند دخول الصفحات
+   *           دالة إحصائيات التاجر (متوفرة فقط للتاجر)
    ******************************************************************/
-  if (window.location.pathname.includes("dashboard.html")) { 
-    initMerchantDashboard(); 
+  function openStatistics() {
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    if (!currentUser || currentUser.type !== "merchant") {
+      Swal.fire("خطأ", "هذه الميزة متاحة للتاجر فقط!", "error");
+      return;
+    }
+
+    const ordersRef = firebase.firestore().collection("orders")
+                        .where("merchantId", "==", currentUser.uid);
+
+    let stats = {
+      total: 0,
+      active: 0,
+      delivering: 0,
+      reported: 0,
+      completed: 0
+    };
+
+    ordersRef.get().then(snapshot => {
+      stats.total = snapshot.size;
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.status === "فعال") {
+          stats.active++;
+        } else if (data.status === "قيد التوصيل") {
+          stats.delivering++;
+        } else if (data.status === "مبلغة") {
+          stats.reported++;
+        } else if (data.status === "مكتملة") {
+          stats.completed++;
+        }
+      });
+
+      const categories = [
+        { label: "إجمالي الطلبات", value: stats.total,     color: "#2563EB" },
+        { label: "طلبات جديدة",    value: stats.active,     color: "#00008B" },
+        { label: "قيد التوصيل",    value: stats.delivering, color: "#87CEEB" },
+        { label: "طلبات مبلغة",    value: stats.reported,   color: "#EF4444" },
+        { label: "طلبات مكتملة",   value: stats.completed,  color: "#10B981" }
+      ];
+
+      const maxValue = stats.total || 1;
+      let statsHtml = `<div class="circular-stats-grid">`;
+      categories.forEach(cat => {
+        const percentage = Math.round((cat.value / maxValue) * 20);
+        statsHtml += `
+          <div class="circular-stat-card">
+            <div class="circular-progress" 
+                 style="--percentage: ${percentage}; --fill-color: ${cat.color};">
+              <div class="circular-inner">
+                <span class="progress-value">${cat.value}</span>
+              </div>
+            </div>
+            <div class="stat-label">${cat.label}</div>
+          </div>
+        `;
+      });
+      statsHtml += `</div>`;
+
+      Swal.fire({
+        title: "الإحصائيات",
+        html: statsHtml,
+        showCloseButton: true,
+        showConfirmButton: false,
+        width: "400px"
+      });
+
+    })
+    .catch(error => {
+      console.error("Error fetching statistics:", error);
+      Swal.fire("خطأ", "حدث خطأ أثناء جلب الإحصائيات", "error");
+    });
   }
-  if (window.location.pathname.includes("driver.html")) { 
-    initDriverDashboard(); 
-  }
-
-})();
-
-/* دوال إغلاق من النطاق العام */
-function closeEditModal() { 
-  const modal = document.getElementById("editOrderModal"); 
-  if(modal) modal.remove(); 
-}
-window.closeEditModal = closeEditModal;
-
-function closeProcessOrderModal() { 
-  const modal = document.getElementById("processOrderModal"); 
-  if(modal) modal.remove(); 
-}
-window.closeProcessOrderModal = closeProcessOrderModal;
-
+  window.openStatistics = openStatistics;
 /******************************************************************
- * إضافة alias لاستدعاء دالة "openActiveAccounts" من صفحة driver.html
+ *           دالة تقارير التاجر 
  ******************************************************************/
-window.showRegisteredAccounts = openActiveAccounts;
-
 /******************************************************************
- * دالة إحصائيات التاجر (متوفرة فقط للتاجر)
+ *           دالة تقارير التاجر 
  ******************************************************************/
-function openStatistics() {
+function openReports() {
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   if (!currentUser || currentUser.type !== "merchant") {
     Swal.fire("خطأ", "هذه الميزة متاحة للتاجر فقط!", "error");
     return;
   }
 
+  const merchantId = currentUser.uid;
   const ordersRef = firebase.firestore().collection("orders")
-                        .where("merchantId", "==", currentUser.uid);
+      .where("merchantId", "==", merchantId);
 
-  let stats = {
-    total: 0,
-    active: 0,
-    delivering: 0,
-    reported: 0,
-    completed: 0
-  };
+  ordersRef.get()
+    .then(snapshot => {
+      const reportsByDate = {};
 
-  ordersRef.get().then(snapshot => {
-    stats.total = snapshot.size;
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      if (data.status === "فعال") {
-        stats.active++;
-      } else if (data.status === "قيد التوصيل") {
-        stats.delivering++;
-      } else if (data.status === "مبلغة") {
-        stats.reported++;
-      } else if (data.status === "مكتملة") {
-        stats.completed++;
-      }
-    });
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (!data.statusChangedAt) return;
 
-    const categories = [
-      { label: "إجمالي الطلبات", value: stats.total,     color: "#2563EB" },
-      { label: "طلبات جديدة",    value: stats.active,     color: "#00008B" },
-      { label: "قيد التوصيل",    value: stats.delivering, color: "#87CEEB" },
-      { label: "طلبات مبلغة",    value: stats.reported,   color: "#EF4444" },
-      { label: "طلبات مكتملة",   value: stats.completed,  color: "#10B981" }
-    ];
+        let dateStr;
+        if (data.statusChangedAt.toDate) {
+          // إذا كان الحقل من نوع Timestamp
+          dateStr = data.statusChangedAt.toDate().toISOString().split('T')[0];
+        } else {
+          // إذا كان الحقل نصي
+          dateStr = data.statusChangedAt;
+        }
 
-    const maxValue = stats.total || 1;
-    let statsHtml = `<div class="circular-stats-grid">`;
-    categories.forEach(cat => {
-      const percentage = Math.round((cat.value / maxValue) * 20);
-      statsHtml += `
-        <div class="circular-stat-card">
-          <div class="circular-progress" 
-               style="--percentage: ${percentage}; --fill-color: ${cat.color};">
-            <div class="circular-inner">
-              <span class="progress-value">${cat.value}</span>
+        // إذا لم يكن هناك كائن للتاريخ المعين، أنشئ واحداً
+        if (!reportsByDate[dateStr]) {
+          reportsByDate[dateStr] = {
+            orderCount: 0,
+            totalOrdersSum: 0,
+            cancelledSum: 0,
+            cancelledCount: 0,
+            completedSum: 0,
+            completedCount: 0,
+          };
+        }
+
+        const price = data.price ? parseFloat(data.price) : 0;
+        reportsByDate[dateStr].orderCount++;
+        reportsByDate[dateStr].totalOrdersSum += price;
+        
+        // الطلبات المبلّغة (ملغية)
+        if (data.status === "مبلغة") {
+          reportsByDate[dateStr].cancelledSum += price;
+          reportsByDate[dateStr].cancelledCount++;
+        }
+        // الطلبات المكتملة
+        if (data.status === "مكتملة") {
+          reportsByDate[dateStr].completedSum += price;
+          reportsByDate[dateStr].completedCount++;
+        }
+      });
+
+      // كتابة البيانات في تقارير التاجر (Collection: merchants -> reports)
+      const batch = firebase.firestore().batch();
+      const dates = Object.keys(reportsByDate);
+
+      dates.forEach(date => {
+        if (reportsByDate[date].orderCount === 0) return;
+
+        const ref = firebase.firestore()
+          .collection("merchants")
+          .doc(merchantId)
+          .collection("reports")
+          .doc(date);
+
+        const { orderCount, totalOrdersSum, cancelledSum, cancelledCount, completedSum, completedCount } = reportsByDate[date];
+
+        batch.set(ref, {
+          orderCount,
+          totalOrdersSum,
+          cancelledSum,
+          cancelledCount,
+          completedSum,
+          completedCount,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      });
+
+      return batch.commit();
+    })
+    .then(() => {
+      // بعد الحفظ، نجلب التقارير من قاعدة البيانات لعرضها
+      return firebase.firestore()
+        .collection("merchants")
+        .doc(merchantId)
+        .collection("reports")
+        .get();
+    })
+    .then(reportsSnapshot => {
+      const dateDocs = [];
+      reportsSnapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.orderCount > 0) {
+          dateDocs.push({ date: doc.id, data: data });
+        }
+      });
+
+      // ترتيب التواريخ تنازلياً
+      dateDocs.sort((a, b) => b.date.localeCompare(a.date));
+
+      let reportHTML = "";
+      dateDocs.forEach(item => {
+        // نضع قيم ابتدائية 0 إذا كانت أي قيمة غير متوفرة لمنع ظهور undefined
+        const {
+          orderCount = 0,
+          totalOrdersSum = 0,
+          cancelledSum = 0,
+          cancelledCount = 0,
+          completedSum = 0,
+          completedCount = 0
+        } = item.data;
+
+        const date = item.date;
+        const companyShare = completedCount * 2000;
+        const receivedAmount = completedSum - companyShare;
+        // يمكنك تغيير هذا الكلاس حسب الحاجة (settled/not-settled)
+        const headerClass = 'accordion-header not-settled';
+
+        reportHTML += `
+          <div class="accordion">
+            <div class="${headerClass}" data-date="${date}">
+              ${date}
+              <span style="font-size:0.9rem; margin-left:5px; color:white;">(${orderCount} طلب)</span>
+            </div>
+            <div class="accordion-body">
+              
+              <!-- مبلغ الطلبات الكلي -->
+              <div class="report-details">
+                <span class="label">مبلغ الطلبات الكلي</span>
+                <span class="value">${totalOrdersSum} دينار</span>
+              </div>
+              <!-- الفاصل الأول -->
+              <div style="height: 1px; background-color: #ddd; margin: 10px 0;"></div>
+              
+              <!-- الطلبات المبلغة -->
+              <div class="report-details">
+                <span class="label">عدد الطلبات المبلغة</span>
+                <span class="value" style="color:red;">${cancelledCount} طلب</span>
+              </div>
+              <div class="report-details">
+                <span class="label">مبلغ الطلبات المبلغة</span>
+                <span class="value">${cancelledSum} دينار</span>
+              </div>
+              <!-- الفاصل الثاني -->
+              <div style="height: 1px; background-color: #ddd; margin: 10px 0;"></div>
+              
+              <!-- الطلبات المكتملة -->
+              <div class="report-details">
+                <span class="label">عدد الطلبات المكتملة</span>
+                <span class="value" style="color:green;">${completedCount} طلب</span>
+              </div>
+              <div class="report-details">
+                <span class="label">مبلغ الطلبات المكتملة</span>
+                <span class="value">${completedSum} دينار</span>
+              </div>
+              <!-- الفاصل الثالث -->
+              <div style="height: 1px; background-color: #ddd; margin: 10px 0;"></div>
+              
+              <!-- بقية التفاصيل -->
+              <div class="report-details">
+                <span class="label">المبلغ المستلم</span>
+                <span class="value">${receivedAmount} دينار</span>
+              </div>
+              <div class="report-details">
+                <span class="label">حساب الشركة</span>
+                <span class="value">${companyShare} دينار</span>
+              </div>
+
+              <!-- حاوية الطلبات التفصيلية لهذا اليوم -->
+              <div class="orders-container" id="orders-${date}" style="margin-top:10px;"></div>
             </div>
           </div>
-          <div class="stat-label">${cat.label}</div>
-        </div>
-      `;
-    });
-    statsHtml += `</div>`;
+        `;
+      });
 
-    Swal.fire({
-      title: "الإحصائيات",
-      html: statsHtml,
-      showCloseButton: true,
-      showConfirmButton: false,
-      width: "400px"
+      Swal.fire({
+        title: "تقارير اليوم والشهر",
+        html: reportHTML,
+        width: "400px",
+        showCloseButton: true,
+        showConfirmButton: false,
+        didOpen: () => {
+          const headers = document.querySelectorAll(".accordion-header");
+          headers.forEach(header => {
+            header.addEventListener("click", () => {
+              header.classList.toggle("active");
+              const body = header.nextElementSibling;
+              body.classList.toggle("open");
+              
+              // عند الفتح نجلب تفاصيل الطلبات الخاصة باليوم المحدد
+              if (body.classList.contains("open")) {
+                const date = header.getAttribute("data-date");
+                fetchOrdersForDate(merchantId, date);
+              }
+            });
+          });
+        }
+      });
+    })
+    .catch(error => {
+      console.error("Error fetching reports:", error);
+      Swal.fire("خطأ", "حدث خطأ أثناء جلب التقارير", "error");
     });
-
-  })
-  .catch(error => {
-    console.error("Error fetching statistics:", error);
-    Swal.fire("خطأ", "حدث خطأ أثناء جلب الإحصائيات", "error");
-  });
 }
 
 /******************************************************************
- * دالة إحصائيات المندوب (يستعرض جميع الطلبات من التجار)
+ *         دالة لجلب الطلبات لكل يوم وعرضها داخل الأكورديون
  ******************************************************************/
-function openDriverStatistics() {
-  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-  if (!currentUser || currentUser.type !== "driver") {
-    Swal.fire("خطأ", "هذه الميزة متاحة للمندوب فقط!", "error");
-    return;
-  }
-  
-  // بما أن المندوب واحد في النظام، فإنه يرى جميع الطلبات من التجار دون فلترة
-  const ordersRef = firebase.firestore().collection("orders");
-  
-  let stats = {
-    total: 0,
-    active: 0,
-    delivering: 0,
-    reported: 0,
-    completed: 0
-  };
-  
-  ordersRef.get().then(snapshot => {
-    stats.total = snapshot.size;
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      if (data.status === "فعال") {
-        stats.active++;
-      } else if (data.status === "قيد التوصيل") {
-        stats.delivering++;
-      } else if (data.status === "مبلغة") {
-        stats.reported++;
-      } else if (data.status === "مكتملة") {
-        stats.completed++;
-      }
-    });
-    
-    const categories = [
-      { label: "إجمالي الطلبات", value: stats.total,     color: "#2563EB" },
-      { label: "طلبات جديدة",    value: stats.active,     color: "#00008B" },
-      { label: "قيد التوصيل",    value: stats.delivering, color: "#87CEEB" },
-      { label: "طلبات مبلغة",    value: stats.reported,   color: "#EF4444" },
-      { label: "طلبات مكتملة",   value: stats.completed,  color: "#10B981" }
-    ];
-    
-    const maxValue = stats.total || 1;
-    let statsHtml = `<div class="circular-stats-grid">`;
-    categories.forEach(cat => {
-      const percentage = Math.round((cat.value / maxValue) * 20);
-      statsHtml += `
-        <div class="circular-stat-card">
-          <div class="circular-progress" 
-               style="--percentage: ${percentage}; --fill-color: ${cat.color};">
-            <div class="circular-inner">
-              <span class="progress-value">${cat.value}</span>
-            </div>
+function fetchOrdersForDate(merchantId, dateStr) {
+  const startDate = new Date(dateStr + "T00:00:00");
+  const endDate = new Date(dateStr + "T23:59:59");
+  const startTimestamp = firebase.firestore.Timestamp.fromDate(startDate);
+  const endTimestamp = firebase.firestore.Timestamp.fromDate(endDate);
+
+  firebase.firestore().collection("orders")
+    .where("merchantId", "==", merchantId)
+    .where("statusChangedAt", ">=", startTimestamp)
+    .where("statusChangedAt", "<=", endTimestamp)
+    .get()
+    .then(snap => {
+      let ordersHTML = "";
+      snap.forEach(doc => {
+        const data = doc.data();
+        ordersHTML += `
+          <div class="order-item" style="margin-bottom:5px; padding:5px; border-bottom:1px solid #ccc;">
+            <strong>رقم الطلب:</strong> ${doc.id}<br/>
+            <strong>الحالة:</strong> ${data.status}<br/>
+            <strong>السعر:</strong> ${data.price} دينار
           </div>
-          <div class="stat-label">${cat.label}</div>
-        </div>
-      `;
+        `;
+      });
+
+      document.getElementById(`orders-${dateStr}`).innerHTML =
+        ordersHTML || "<p>لا توجد طلبات لهذا اليوم.</p>";
+    })
+    .catch(err => {
+      console.error("Error fetching orders for date:", err);
     });
-    statsHtml += `</div>`;
-    
-    Swal.fire({
-      title: "إحصائيات المندوب",
-      html: statsHtml,
-      showCloseButton: true,
-      showConfirmButton: false,
-      width: "400px"
-    });
-    
-  })
-  .catch(error => {
-    console.error("Error fetching driver statistics:", error);
-    Swal.fire("خطأ", "حدث خطأ أثناء جلب الإحصائيات", "error");
-  });
 }
-window.openDriverStatistics = openDriverStatistics;
+
+window.openReports = openReports;
+  /******************************************************************
+   *           دالة إحصائيات المندوب (للمندوب فقط)
+   ******************************************************************/
+  function openDriverStatistics() {
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    if (!currentUser || currentUser.type !== "driver") {
+      Swal.fire("خطأ", "هذه الميزة متاحة للمندوب فقط!", "error");
+      return;
+    }
+    
+    const ordersRef = firebase.firestore().collection("orders");
+    
+    let stats = {
+      total: 0,
+      active: 0,
+      delivering: 0,
+      reported: 0,
+      completed: 0
+    };
+    
+    ordersRef.get().then(snapshot => {
+      stats.total = snapshot.size;
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.status === "فعال") {
+          stats.active++;
+        } else if (data.status === "قيد التوصيل") {
+          stats.delivering++;
+        } else if (data.status === "مبلغة") {
+          stats.reported++;
+        } else if (data.status === "مكتملة") {
+          stats.completed++;
+        }
+      });
+      
+      const categories = [
+        { label: "إجمالي الطلبات", value: stats.total,     color: "#2563EB" },
+        { label: "طلبات جديدة",    value: stats.active,     color: "#00008B" },
+        { label: "قيد التوصيل",    value: stats.delivering, color: "#87CEEB" },
+        { label: "طلبات مبلغة",    value: stats.reported,   color: "#EF4444" },
+        { label: "طلبات مكتملة",   value: stats.completed,  color: "#10B981" }
+      ];
+      
+      const maxValue = stats.total || 1;
+      let statsHtml = `<div class="circular-stats-grid">`;
+      categories.forEach(cat => {
+        const percentage = Math.round((cat.value / maxValue) * 20);
+        statsHtml += `
+          <div class="circular-stat-card">
+            <div class="circular-progress" 
+                 style="--percentage: ${percentage}; --fill-color: ${cat.color};">
+              <div class="circular-inner">
+                <span class="progress-value">${cat.value}</span>
+              </div>
+            </div>
+            <div class="stat-label">${cat.label}</div>
+          </div>
+        `;
+      });
+      statsHtml += `</div>`;
+      Swal.fire({
+        title: "الإحصائيات",
+        html: statsHtml,
+        showCloseButton: true,
+        showConfirmButton: false,
+        width: "400px"
+      });
+    })
+    .catch(error => {
+      console.error("Error fetching statistics:", error);
+      Swal.fire("خطأ", "حدث خطأ أثناء جلب الإحصائيات", "error");
+    });
+  }
+  window.openDriverStatistics = openDriverStatistics;
+
+  /******************************************************************
+   *           إضافة مستمع DOMContentLoaded لإعادة تهيئة التبويبات
+   *           وإضافة مستمع لزر الإشعارات (notificationsBtn) بحيث عند النقر يتم إغلاق القائمة الجانبية وعرض نافذة الإشعارات
+   ******************************************************************/
+  document.addEventListener("DOMContentLoaded", function(){
+    // إعادة تهيئة التبويبات عند تحميل الصفحة
+    setupTabs();
+    // التأكد من وجود زر الإشعارات في القائمة الجانبية وإضافة مستمع الحدث له
+    const notificationsBtn = document.getElementById("notificationsBtn");
+    if(notificationsBtn){
+       notificationsBtn.addEventListener("click", function(){
+          closeSidebar();
+          openNotifications();
+       });
+    }
+  });
+})();
+document.addEventListener("DOMContentLoaded", function() {
+    // التأكد من وجود زر الإشعارات وإضافة مستمع الحدث له
+    const notificationsBtn = document.getElementById("notificationsBtn");
+    if (notificationsBtn) {
+        notificationsBtn.addEventListener("click", function() {
+            closeSidebar();
+            setTimeout(openNotifications, 300); // تأخير فتح نافذة الإشعارات لمدة 300 مللي ثانية
+        });
+    }
+});
+setInterval(loadMerchantStats, 10000); // تحديث كل 10 ثانية
+setInterval(loadDriverStats, 10000); // تحديث كل 10 ثانية
+
+function loadMerchantStats() {
+  try {
+    // كود جلب بيانات التاجر
+  } catch (err) {
+    console.error("خطأ في جلب إحصائيات التاجر:", err);
+  }
+}
