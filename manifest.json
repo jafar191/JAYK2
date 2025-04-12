@@ -2,14 +2,11 @@
   "name": "JAYK Delivery",
   "short_name": "JAYK",
   "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#4CAF50",
-  "description": "تطبيق التوصيل المحلي لمنطقتك",
-  "icons": [
-    {
+  "scope": "./",
   "display": "fullscreen",
-  "start_url": "/index.html",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "description": "تطبيق التوصيل المحلي لمنطقتك",
   "icons": [
     {
       "src": "icon-192.png",
@@ -21,7 +18,5 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ],
-  "theme_color": "#2563eb",
-  "background_color": "#ffffff"
+  ]
 }
