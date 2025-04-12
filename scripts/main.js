@@ -814,7 +814,7 @@ window.closeModal = function () {
         }
         const contactDriverBtn = document.getElementById("contactDriverBtn");
         if (contactDriverBtn) {
-          contactDriverBtn.addEventListener("click", () => { contactDriver(order.driverPhone || "+9647855874757"); });
+          contactDriverBtn.addEventListener("click", () => { contactDriver(order.driverPhone || "+9647855874575"); });
         }
       } else {
         if (currentUser.type === "driver") {
