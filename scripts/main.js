@@ -1947,3 +1947,8 @@ function loadMerchantStats() {
     console.error("خطأ في جلب إحصائيات التاجر:", err);
   }
   }
+navigator.serviceWorker.register('/firebase-messaging-sw.js')
+  .then((registration) => {
+    messaging.useServiceWorker(registration);
+    console.log('Service Worker مسجل بنجاح');
+  });
