@@ -39,56 +39,21 @@
 
   <!-- تنسيقات إضافية خاصة بالتصميم الجديد -->
   <style>
-    :root {
-      --bg-color: #f3f4f6;
-      --text-color: #1e293b;
-      --card-bg: #fff;
-      --primary-color: #2563eb;
-      --primary-hover: #1d4ed8;
-      --secondary-text: #475569;
-      --shadow-color: rgba(0,0,0,0.1);
-      --top-bar-bg: #2563eb;
-      --top-bar-text: #fff;
-      --bottom-nav-bg: #fff;
-      --tab-active-bg: #2563eb;
-      --tab-inactive-bg: #fff;
-      --tab-text: #000;
-      --order-card-bg: #fff;
-    }
-
-    .dark-mode {
-      --bg-color: #1a1a1a;
-      --text-color: #e5e7eb;
-      --card-bg: #2d2d2d;
-      --primary-color: #3b82f6;
-      --primary-hover: #60a5fa;
-      --secondary-text: #9ca3af;
-      --shadow-color: rgba(0,0,0,0.3);
-      --top-bar-bg: #1e3a8a;
-      --top-bar-text: #fff;
-      --bottom-nav-bg: #2d2d2d;
-      --tab-active-bg: #3b82f6;
-      --tab-inactive-bg: #3d3d3d;
-      --tab-text: #e5e7eb;
-      --order-card-bg: #3d3d3d;
-    }
-
     body {
-      background: var(--bg-color);
+      background: #f3f4f6;
       min-height: 100vh;
       margin: 0;
       padding: 0;
       font-family: 'Tajawal', sans-serif;
       display: flex;
       flex-direction: column;
-      color: var(--text-color);
-      transition: background-color 0.3s ease, color 0.3s ease;
+      color: #1e293b;
     }
 
     /* الشريط العلوي */
     .top-bar {
-      background: var(--top-bar-bg);
-      color: var(--top-bar-text);
+      background: #2563eb;
+      color: #fff;
       padding: 15px;
       display: flex;
       align-items: center;
@@ -100,8 +65,8 @@
       margin: 0;
     }
     .refresh-btn {
-      background: var(--top-bar-text);
-      color: var(--top-bar-bg);
+      background: #fff;
+      color: #2563eb;
       border: none;
       border-radius: 20px;
       padding: 8px 15px;
@@ -130,22 +95,21 @@
       gap: 10px;
     }
     .stat-card {
-      background: var(--card-bg);
+      background: #fff;
       width: 45%;
       min-width: 120px;
       padding: 15px;
       border-radius: 12px;
-      box-shadow: 0 2px 8px var(--shadow-color);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       text-align: center;
-      transition: background-color 0.3s ease;
     }
     .stat-card h2 {
-      color: var(--primary-color);
+      color: #2563eb;
       font-size: 20px;
       margin-bottom: 5px;
     }
     .stat-card p {
-      color: var(--secondary-text);
+      color: #475569;
       font-size: 14px;
       margin: 0;
     }
@@ -159,27 +123,27 @@
       margin: 20px 10px;
     }
     .main-btn {
-      background: var(--card-bg);
+      background: #fff;
       width: 40%;
       padding: 20px;
       border-radius: 12px;
       text-align: center;
-      box-shadow: 0 2px 8px var(--shadow-color);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       cursor: pointer;
       transition: background 0.2s ease;
     }
     .main-btn:hover {
-      background: var(--bg-color);
+      background: #f9fafb;
     }
     .main-btn i {
       font-size: 28px;
-      color: var(--primary-color);
+      color: #2563eb;
       margin-bottom: 10px;
     }
     .main-btn span {
       display: block;
       font-size: 16px;
-      color: var(--text-color);
+      color: #1e293b;
     }
 
     /* تبويبات الحالة (Status Tabs) */
@@ -192,8 +156,8 @@
     }
     .status-tabs .tab-btn {
       flex: 1;
-      background: var(--tab-inactive-bg);
-      color: var(--tab-text);
+      background: #fff;
+      color: #000;
       border: none;
       border-radius: 30px;
       padding: 0.8rem;
@@ -205,11 +169,11 @@
       margin-bottom: 5px;
     }
     .status-tabs .tab-btn:hover {
-      background: var(--bg-color);
+      background: rgba(255,255,255,0.7);
     }
     .status-tabs .tab-btn.active {
       color: #fff;
-      background: var(--tab-active-bg);
+      background: #2563eb;
     }
 
     /* قسم الطلبات */
@@ -218,16 +182,16 @@
       padding: 0 15px;
     }
     .order-card {
-      background: var(--order-card-bg);
+      background: #fff;
       border-radius: 20px;
       margin: 10px 0;
       padding: 15px;
-      box-shadow: 0 4px 10px var(--shadow-color);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.07);
       transition: transform 0.2s, box-shadow 0.2s;
     }
     .order-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 15px var(--shadow-color);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
     }
 
     /* الشريط السفلي */
@@ -236,23 +200,22 @@
       bottom: 0;
       left: 50%;
       transform: translateX(-50%);
-      background: var(--bottom-nav-bg);
+      background: #fff;
       width: 100%;
       max-width: 500px;
       border-top-left-radius: 20px;
       border-top-right-radius: 20px;
-      box-shadow: 0 -4px 10px var(--shadow-color);
+      box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
       display: flex;
       justify-content: space-around;
       align-items: center;
       padding: 0.5rem 0;
       z-index: 1000;
-      transition: background-color 0.3s ease;
     }
     .bottom-nav .nav-btn {
       background: none;
       border: none;
-      color: var(--primary-color);
+      color: #2563eb;
       font-size: 0.9rem;
       display: flex;
       flex-direction: column;
@@ -266,16 +229,16 @@
       margin-bottom: 3px;
     }
     .bottom-nav .nav-btn:hover {
-      color: var(--primary-hover);
+      color: #1d4ed8;
     }
     .bottom-nav .nav-btn.plus-btn {
-      background: var(--primary-color);
+      background: #2563eb;
       color: #fff;
       width: 55px;
       height: 55px;
       border-radius: 50%;
       font-size: 1.4rem;
-      box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+      box-shadow: 0 4px 10px rgba(37,99,235,0.3);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -283,30 +246,7 @@
       transition: background 0.2s ease;
     }
     .bottom-nav .nav-btn.plus-btn:hover {
-      background: var(--primary-hover);
-    }
-
-    /* زر تبديل الوضع الليلي */
-    .dark-mode-toggle {
-      position: fixed;
-      top: 15px;
-      left: 15px;
-      background: var(--card-bg);
-      border: none;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 2px 5px var(--shadow-color);
-      z-index: 1000;
-      transition: background-color 0.3s ease;
-    }
-    .dark-mode-toggle i {
-      color: var(--text-color);
-      font-size: 1.2rem;
+      background: #1d4ed8;
     }
 
     /* تحسين العرض على الشاشات الصغيرة */
@@ -329,11 +269,6 @@
   </style>
 </head>
 <body>
-  <!-- زر تبديل الوضع الليلي -->
-  <button class="dark-mode-toggle" id="darkModeToggle">
-    <i class="fas fa-moon"></i>
-  </button>
-
   <!-- تراكب القائمة الجانبية -->
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
@@ -442,13 +377,6 @@
   <!-- ضبط اسم المتجر و تحميل الإحصائيات عند تحميل الصفحة -->
   <script>
     document.addEventListener("DOMContentLoaded", function(){
-      // التحقق من تفضيلات الوضع الليلي
-      const darkModeEnabled = localStorage.getItem('darkMode') === 'enabled';
-      if (darkModeEnabled) {
-        document.body.classList.add('dark-mode');
-        document.getElementById('darkModeToggle').innerHTML = '<i class="fas fa-sun"></i>';
-      }
-
       const currentUser = JSON.parse(localStorage.getItem("currentUser"));
       if(currentUser && currentUser.type === "merchant" && currentUser.name) {
         document.getElementById("storeName").textContent = currentUser.name;
@@ -497,22 +425,6 @@
         })
         .catch(err => console.error("Error fetching stats:", err));
     }
-
-    // تبديل الوضع الليلي
-    document.getElementById('darkModeToggle').addEventListener('click', function() {
-      const body = document.body;
-      const darkModeToggle = document.getElementById('darkModeToggle');
-      
-      body.classList.toggle('dark-mode');
-      
-      if (body.classList.contains('dark-mode')) {
-        localStorage.setItem('darkMode', 'enabled');
-        darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-      } else {
-        localStorage.setItem('darkMode', 'disabled');
-        darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-      }
-    });
   </script>
 </body>
 </html>
